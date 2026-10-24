@@ -1,5 +1,5 @@
 {
-  "name": "leitstand",
+  "name": "ogma",
   "private": true,
   "version": "1.0.0",
   "license": "MIT",
@@ -7,7 +7,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/darkjive/Leitstand.git"
+    "url": "git+https://github.com/darkjive/Ogma.git"
   },
   "description": "Developer dashboard: live system metrics, Git repos, Docker and service status",
   "main": "electron/main.cjs",

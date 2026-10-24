@@ -67,7 +67,7 @@ async function createWindow() {
     width: 1600,
     height: 1000,
     backgroundColor: '#0a0a0f',
-    title: 'Leitstand',
+    title: 'Ogma',
     icon: path.join(__dirname, 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false },

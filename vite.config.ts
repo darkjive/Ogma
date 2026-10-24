@@ -13,7 +13,7 @@ export default defineConfig({
     port: 5180,
     strictPort: true,
     // Extra host names (comma-separated), e.g. the tailnet name when served through the Pforte gateway
-    allowedHosts: (process.env.LEITSTAND_ALLOWED_HOSTS || '').split(',').filter(Boolean),
+    allowedHosts: (process.env.OGMA_ALLOWED_HOSTS || '').split(',').filter(Boolean),
     proxy: {
       // Proxy API calls to backend server
       '/api': {

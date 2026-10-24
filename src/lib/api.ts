@@ -35,7 +35,7 @@ export function apiFetch(path: string, init: RequestInit = {}): Promise<Response
   const headers = new Headers(init.headers || {});
   // Custom header → browsers must preflight, so foreign sites cannot trigger
   // state-changing requests (server enforces it for non-GET, see server/index.ts).
-  headers.set('X-Leitstand-Request', '1');
+  headers.set('X-Ogma-Request', '1');
   if (token) headers.set('X-Dashboard-Token', token);
   return fetch(path, { ...init, headers });
 }

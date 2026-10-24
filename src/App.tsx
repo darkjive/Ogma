@@ -455,7 +455,7 @@ function App() {
           <div className="flex items-center justify-between gap-2">
             <div className="ds-brand">
               <img src="/favicon.svg" alt="" />
-              <h1>Leitstand</h1>
+              <h1>Ogma</h1>
             </div>
             <div className="flex items-center gap-2">
               <SoundManager />
@@ -614,9 +614,7 @@ function App() {
         </GridLayout>
 
         <footer className="mt-12 py-6 border-t border-line text-center">
-          <p className="text-sm text-gray-500">
-            Leitstand // Powered by React 19 + Vite 7 + Tailwind 4
-          </p>
+          <p className="text-sm text-gray-500">Ogma // Powered by React 19 + Vite 7 + Tailwind 4</p>
           <p className="text-xs text-gray-600 mt-2">Widgets per Drag &amp; Drop anordnen</p>
           <p className="text-xs text-gray-700 mt-2">
             Crafted by <span style={{ color: 'var(--color-accent)' }}>𐌀𐌋𐌀𐌉𐌍</span>

@@ -1,4 +1,4 @@
-# 🚀 Leitstand
+# Ogma
 
 **Dev-Dashboard** für den Arbeitsrechner: Systemlast, Git-Repos, Docker und Dienst-Status auf einen Blick.
 
@@ -12,8 +12,8 @@
 > **Developer dashboard for your workstation: live system metrics, Git repos, Docker containers and service status in one view**
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="Leitstand dashboard on desktop" width="72%" />
-  <img src="docs/screenshot-mobile.png" alt="Leitstand dashboard on a phone" width="24%" />
+  <img src="docs/screenshot.png" alt="Ogma dashboard on desktop" width="72%" />
+  <img src="docs/screenshot-mobile.png" alt="Ogma dashboard on a phone" width="24%" />
 </p>
 
 ## ✨ Features
@@ -82,8 +82,8 @@ Moira Board: columns can be hidden, ideas are captured raw (badge "Idee" until `
 ### Installation
 
 ```bash
-git clone https://github.com/darkjive/Leitstand.git
-cd Leitstand
+git clone https://github.com/darkjive/Ogma.git
+cd Ogma
 pnpm install
 
 # Start frontend (http://localhost:5180) + backend (http://localhost:3010)
@@ -106,15 +106,15 @@ The dashboard works out of the box with defaults. For overrides, copy `.env.exam
 cp .env.example .env
 ```
 
-| Variable                    | Default                         | Purpose                                                                                                                                             |
-| --------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BIND_HOST`                 | `127.0.0.1`                     | Network interface to bind the backend to (loopback default)                                                                                         |
-| `BACKUP_SCRIPTS_DIR`        | `~/Dev/_scripts`                | Repo with `backup-scripts/run-tier.sh` and `backup-logs/`                                                                                           |
-| `BACKUP_STATE_DIR`          | `~/.local/state/backup-scripts` | Per-tier JSON status written by the scripts                                                                                                         |
-| `PORT`                      | `3010`                          | Backend port (also picked up by the Vite proxy + Electron)                                                                                          |
-| `DASHBOARD_TOKEN`           | _(empty)_                       | Shared token for destructive endpoints. Empty = open (loopback default). **Required** when `BIND_HOST=0.0.0.0`.                                     |
-| `LEITSTAND_ALLOWED_HOSTS`   | _(empty)_                       | Extra host names the Vite dev server accepts (comma-separated), e.g. a reverse proxy's public name.                                                 |
-| `LEITSTAND_ALLOWED_ORIGINS` | _(empty)_                       | Exact page origins (`https://host:port`) allowed to open the metrics WebSocket besides loopback. Only for an authenticating reverse proxy in front. |
+| Variable               | Default                         | Purpose                                                                                                                                             |
+| ---------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BIND_HOST`            | `127.0.0.1`                     | Network interface to bind the backend to (loopback default)                                                                                         |
+| `BACKUP_SCRIPTS_DIR`   | `~/Dev/_scripts`                | Repo with `backup-scripts/run-tier.sh` and `backup-logs/`                                                                                           |
+| `BACKUP_STATE_DIR`     | `~/.local/state/backup-scripts` | Per-tier JSON status written by the scripts                                                                                                         |
+| `PORT`                 | `3010`                          | Backend port (also picked up by the Vite proxy + Electron)                                                                                          |
+| `DASHBOARD_TOKEN`      | _(empty)_                       | Shared token for destructive endpoints. Empty = open (loopback default). **Required** when `BIND_HOST=0.0.0.0`.                                     |
+| `OGMA_ALLOWED_HOSTS`   | _(empty)_                       | Extra host names the Vite dev server accepts (comma-separated), e.g. a reverse proxy's public name.                                                 |
+| `OGMA_ALLOWED_ORIGINS` | _(empty)_                       | Exact page origins (`https://host:port`) allowed to open the metrics WebSocket besides loopback. Only for an authenticating reverse proxy in front. |
 
 > Frontend dev is `5180`, Vite preview is `4173`.
 
@@ -168,7 +168,7 @@ app-specific Tailwind settings and keyframes live in the `@theme {}` block of `s
 ## 📁 Project Structure
 
 ```
-Leitstand/
+Ogma/
 ├── shared/
 │   └── types.ts                  # Wire types shared by server + frontend
 ├── server/

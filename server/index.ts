@@ -79,7 +79,7 @@ const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN || '';
 // Pforte gateway (https://host:port), comma-separated. The browser sets Origin itself,
 // so a foreign site cannot claim one of these.
 const ALLOWED_ORIGINS = new Set(
-  (process.env.LEITSTAND_ALLOWED_ORIGINS || '')
+  (process.env.OGMA_ALLOWED_ORIGINS || '')
     .split(',')
     .map(o => o.trim().replace(/\/$/, ''))
     .filter(Boolean)
@@ -173,8 +173,8 @@ app.use(
 // CORS origin allowlist rejects. apiFetch() sets it on every request.
 app.use('/api', (req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
-  if (req.get('X-Leitstand-Request') !== '1') {
-    return res.status(403).json({ error: 'Missing X-Leitstand-Request header' });
+  if (req.get('X-Ogma-Request') !== '1') {
+    return res.status(403).json({ error: 'Missing X-Ogma-Request header' });
   }
   next();
 });
@@ -796,7 +796,7 @@ if (!isLoopbackBind && !DASHBOARD_TOKEN) {
 }
 
 server.listen(PORT, HOST, () => {
-  console.log(`\nLeitstand API running on http://${HOST}:${PORT}`);
+  console.log(`\nOgma API running on http://${HOST}:${PORT}`);
   console.log(`System Metrics (HTTP): http://${HOST}:${PORT}/api/metrics`);
   console.log(`System Metrics (WebSocket): ws://${HOST}:${PORT}/ws`);
   console.log(`Weather: http://${HOST}:${PORT}/api/weather?location=Munich`);
