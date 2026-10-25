@@ -6,6 +6,12 @@ import type { GitStatus, GitCommit, RepoSummary, BulkResultItem } from '../../sh
 
 const execAsync = promisify(exec);
 
+// Commits made from the widget are authored (and committed) by the Ogma agent identity.
+const OGMA_GIT_IDENTITY = {
+  name: 'Ogma',
+  email: '347266137+ogma-agent@users.noreply.github.com',
+};
+
 // Network operations must never block on a credential prompt (no TTY here) or hang
 // forever on a dead remote.
 const NET_OPTS = {
@@ -504,10 +510,22 @@ export async function gitCommit(
     await execAsync('git add .', { cwd: repoPath });
 
     // Commit with message - use spawn to prevent command injection
-    const gitProcess = spawn('git', ['commit', '-m', message], {
-      cwd: repoPath,
-      shell: false,
-    });
+    const gitProcess = spawn(
+      'git',
+      [
+        '-c',
+        `user.name=${OGMA_GIT_IDENTITY.name}`,
+        '-c',
+        `user.email=${OGMA_GIT_IDENTITY.email}`,
+        'commit',
+        '-m',
+        message,
+      ],
+      {
+        cwd: repoPath,
+        shell: false,
+      }
+    );
 
     let stdout = '';
     let stderr = '';

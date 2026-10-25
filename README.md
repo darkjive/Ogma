@@ -27,7 +27,7 @@
 | **Docker Monitoring**                                                                                                              | Docker socket                                                                                                    |
 | **Backups**                                                                                                                        | status files + logs of `_scripts/backup-scripts` (`BACKUP_SCRIPTS_DIR`, `BACKUP_STATE_DIR`), systemd user timers |
 | **Kanban Board**                                                                                                                    | task files in `~/.local/share/kanban/tasks` (`KANBAN_DIR`)                                                         |
-| **Git Widget**                                                                                                                     | status, pull, push, fetch, commit, bulk operations                                                               |
+| **Git Widget**                                                                                                                     | status, pull, push, fetch, commit (message suggested by local Ollama, committed as Ogma), bulk operations         |
 | **Web Scraper**                                                                                                                    | Playwright/Chromium (see NixOS note below)                                                                       |
 | **GitHub Stats**                                                                                                                   | GitHub API (set your username in Settings)                                                                       |
 | **Service Status**                                                                                                                 | Statuspage.io API (Cloudflare, GitHub, OpenAI, etc.)                                                             |
@@ -217,7 +217,7 @@ Ogma/
 | `GET /api/backups/logs/:file`   | Tail of a backup log (strict file-name whitelist)                            |
 | `GET /api/service-status`       | Aggregated Statuspage.io data                                                |
 | `GET /api/connectivity`         | HTTP latency probes                                                          |
-| `GET/POST /api/git/*`           | status, pull, push, fetch, commit, bulk                                      |
+| `GET/POST /api/git/*`           | status, pull, push, fetch, commit, commit-message (Ollama), bulk             |
 | `POST /api/scrape`              | Playwright scraper (SSRF-guarded)                                            |
 | `GET /health`                   | Health check                                                                 |
 | `WebSocket /ws`                 | Real-time metrics stream (2s broadcast)                                      |

@@ -19,6 +19,7 @@ import {
   Cloud,
   CloudOff,
   AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
 
 import type {
@@ -136,6 +137,12 @@ export function GitStatus() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [commitMsg, setCommitMsg] = useState('');
   const [showCommitInput, setShowCommitInput] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const suggestAbortRef = useRef<AbortController | null>(null);
+  // Set when the user edits the field, so a late suggestion never overwrites their text.
+  const userTypedRef = useRef(false);
+
+  useEffect(() => () => suggestAbortRef.current?.abort(), []);
 
   // Bulk commit modal
   const [bulkCommitOpen, setBulkCommitOpen] = useState(false);
@@ -258,6 +265,43 @@ export function GitStatus() {
     }
   };
 
+  const requestSuggestion = async (path: string) => {
+    suggestAbortRef.current?.abort();
+    const controller = new AbortController();
+    suggestAbortRef.current = controller;
+    userTypedRef.current = false;
+    setSuggestLoading(true);
+    try {
+      const res = await apiFetch(`/api/git/commit-message?path=${encodeURIComponent(path)}`, {
+        method: 'POST',
+        signal: controller.signal,
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      if (!userTypedRef.current) setCommitMsg(result.message);
+    } catch {
+      if (!controller.signal.aborted) toast('Ollama nicht erreichbar');
+    } finally {
+      if (suggestAbortRef.current === controller) {
+        suggestAbortRef.current = null;
+        setSuggestLoading(false);
+      }
+    }
+  };
+
+  const openCommitInput = (path: string) => {
+    setShowCommitInput(true);
+    if (!commitMsg) requestSuggestion(path);
+  };
+
+  const closeCommitInput = () => {
+    suggestAbortRef.current?.abort();
+    suggestAbortRef.current = null;
+    setSuggestLoading(false);
+    setShowCommitInput(false);
+    setCommitMsg('');
+  };
+
   const handleCommit = async (path: string) => {
     if (!commitMsg.trim()) return;
     setActionLoading(prev => ({ ...prev, [path]: 'commit' }));
@@ -271,8 +315,7 @@ export function GitStatus() {
       if (!result.success) {
         toast(`Commit failed: ${result.message}`);
       } else {
-        setCommitMsg('');
-        setShowCommitInput(false);
+        closeCommitInput();
       }
       await Promise.all([scan(), loadDetail(path)]);
     } catch {
@@ -689,7 +732,7 @@ export function GitStatus() {
                   {/* Commit input */}
                   {!showCommitInput ? (
                     <button
-                      onClick={() => setShowCommitInput(true)}
+                      onClick={() => openCommitInput(repo.path)}
                       disabled={repo.changedFiles === 0}
                       className="ds-btn sm block"
                     >
@@ -698,19 +741,22 @@ export function GitStatus() {
                     </button>
                   ) : (
                     <div className="space-y-1">
-                      <input
-                        type="text"
+                      <textarea
+                        rows={3}
                         value={commitMsg}
-                        onChange={e => setCommitMsg(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') handleCommit(repo.path);
-                          if (e.key === 'Escape') {
-                            setShowCommitInput(false);
-                            setCommitMsg('');
-                          }
+                        onChange={e => {
+                          userTypedRef.current = true;
+                          setCommitMsg(e.target.value);
                         }}
-                        placeholder="commit message..."
-                        className="w-full px-2 py-1 bg-bg border border-line text-text rounded text-xs"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleCommit(repo.path);
+                          }
+                          if (e.key === 'Escape') closeCommitInput();
+                        }}
+                        placeholder={suggestLoading ? 'Ogma schreibt…' : 'commit message...'}
+                        className="w-full px-2 py-1 bg-bg border border-line text-text rounded text-xs font-mono resize-y"
                         autoFocus
                       />
                       <div className="flex gap-1">
@@ -722,10 +768,16 @@ export function GitStatus() {
                           {loading === 'commit' ? 'Committing...' : 'Commit All'}
                         </button>
                         <button
-                          onClick={() => {
-                            setShowCommitInput(false);
-                            setCommitMsg('');
-                          }}
+                          onClick={() => requestSuggestion(repo.path)}
+                          disabled={suggestLoading}
+                          className={`ds-btn sm${suggestLoading ? ' busy' : ''}`}
+                          title="Commit-Message per Ollama vorschlagen"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Vorschlag
+                        </button>
+                        <button
+                          onClick={closeCommitInput}
                           className="px-2 py-1 bg-active text-text rounded text-xs"
                         >
                           Abbrechen

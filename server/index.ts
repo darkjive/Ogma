@@ -29,6 +29,7 @@ import {
   bulkCommit,
   bulkFetch,
 } from './services/gitStatus.js';
+import { suggestCommitMessage, OllamaUnavailableError } from './services/commitMessage.js';
 import { getDockerInfo } from './services/docker.js';
 import { isPrivateHost } from './services/netGuard.js';
 import {
@@ -633,6 +634,21 @@ app.post('/api/git/commit', generalLimiter, async (req, res) => {
     }
     console.error('Failed to commit:', error);
     res.status(500).json({ error: 'Failed to commit' });
+  }
+});
+
+app.post('/api/git/commit-message', generalLimiter, async (req, res) => {
+  try {
+    const userPath = (req.query.path as string) || process.cwd();
+    const repoPath = validateGitPath(userPath);
+    const message = await suggestCommitMessage(repoPath);
+    res.json({ message });
+  } catch (error) {
+    console.error('Failed to suggest commit message:', error);
+    if (error instanceof OllamaUnavailableError) {
+      return res.status(503).json({ error: 'Ollama unavailable' });
+    }
+    res.status(500).json({ error: 'Failed to suggest commit message' });
   }
 });
 
