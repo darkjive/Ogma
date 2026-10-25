@@ -4,21 +4,21 @@ import { spawn } from 'child_process';
 import { mkdir, readdir, readFile, rename, stat, writeFile, open } from 'fs/promises';
 import { homedir } from 'os';
 import { basename, join } from 'path';
-import type { MoiraActivity, MoiraStatus, MoiraTask } from '../../shared/types.js';
+import type { KanbanActivity, KanbanStatus, KanbanTask } from '../../shared/types.js';
 
-// Same files and format as Moira/src/moira/store.py, so TUI and widget stay interchangeable.
-const TASK_DIR = process.env.MOIRA_DIR || join(homedir(), '.local/share/moira/tasks');
+// Task files: one Markdown file per task in TASK_DIR, frontmatter title/status/project/created.
+const TASK_DIR = process.env.KANBAN_DIR || join(homedir(), '.local/share/kanban/tasks');
 const ARCHIVE_DIR = join(TASK_DIR, 'archive');
 const ACTIVITY_DIR = join(TASK_DIR, '..', 'activity');
 const PROJECTS_DIR = join(homedir(), 'Dev');
-const STATUSES: readonly MoiraStatus[] = ['todo', 'doing', 'review', 'done'];
+const STATUSES: readonly KanbanStatus[] = ['todo', 'doing', 'review', 'done'];
 const FILE_RE = /^\d{3}-[a-z0-9-]+\.md$/;
 
 function isTaskFile(name: string): boolean {
   return FILE_RE.test(name);
 }
 
-async function parseTask(file: string): Promise<MoiraTask> {
+async function parseTask(file: string): Promise<KanbanTask> {
   const text = await readFile(join(TASK_DIR, file), 'utf-8');
   const meta: Record<string, string> = {};
   let body = text;
@@ -46,14 +46,14 @@ async function parseTask(file: string): Promise<MoiraTask> {
   };
 }
 
-async function saveTask(task: MoiraTask): Promise<void> {
+async function saveTask(task: KanbanTask): Promise<void> {
   let head = `title: ${task.title}\nstatus: ${task.status}\nproject: ${task.project}\ncreated: ${task.created}`;
   if (task.preview) head += `\npreview: ${task.preview}`;
   if (task.previewCmd) head += `\npreview_cmd: ${task.previewCmd}`;
   await writeFile(join(TASK_DIR, task.file), `---\n${head}\n---\n\n${task.body.trim()}\n`, 'utf-8');
 }
 
-let cache: { tasks: MoiraTask[]; etag: string } | null = null;
+let cache: { tasks: KanbanTask[]; etag: string } | null = null;
 let watching = false;
 let debounce: NodeJS.Timeout | undefined;
 
@@ -72,7 +72,7 @@ function startWatching() {
   }
 }
 
-export async function listTasks(): Promise<{ tasks: MoiraTask[]; etag: string }> {
+export async function listTasks(): Promise<{ tasks: KanbanTask[]; etag: string }> {
   if (cache) return cache;
   let names: string[] = [];
   try {
@@ -100,12 +100,12 @@ export async function listProjects(): Promise<string[]> {
     .sort((a, b) => a.localeCompare(b));
 }
 
-async function findTask(file: string): Promise<MoiraTask> {
+async function findTask(file: string): Promise<KanbanTask> {
   if (!isTaskFile(file)) throw new Error('Invalid task file');
   return parseTask(file);
 }
 
-export async function setStatus(file: string, status: MoiraStatus): Promise<void> {
+export async function setStatus(file: string, status: KanbanStatus): Promise<void> {
   const task = await findTask(file);
   task.status = status;
   await saveTask(task);
@@ -125,12 +125,12 @@ function slugify(title: string): string {
   return slug || 'aufgabe';
 }
 
-/** Create a task file with the next free number (tasks/ and archive/ together), like the TUI. */
+/** Create a task file with the next free number (tasks/ and archive/ together). */
 export async function createTask(input: {
   title: string;
   project: string;
   body: string;
-}): Promise<MoiraTask> {
+}): Promise<KanbanTask> {
   await mkdir(TASK_DIR, { recursive: true });
   const names = [
     ...(await readdir(TASK_DIR)),
@@ -138,7 +138,7 @@ export async function createTask(input: {
   ].filter(isTaskFile);
   const next = Math.max(0, ...names.map(n => Number(n.slice(0, 3)))) + 1;
   const file = `${String(next).padStart(3, '0')}-${slugify(input.title)}.md`;
-  const task: MoiraTask = {
+  const task: KanbanTask = {
     file,
     number: file.split('-', 1)[0],
     title: input.title,
@@ -162,7 +162,7 @@ export async function archiveTask(file: string): Promise<void> {
   cache = null;
 }
 
-// Mirrors Moira's reachable_url: loopback hosts are tried as 127.0.0.1, localhost and [::1].
+// Loopback preview hosts are tried as 127.0.0.1, localhost and [::1].
 async function reachableUrl(url: string): Promise<string | null> {
   let parsed: URL;
   try {
@@ -221,11 +221,11 @@ export async function startPreview(file: string): Promise<string> {
 }
 
 /**
- * Live state of Claude sessions, written per session by ~/.claude/hooks/moira-activity.sh.
- * A session belongs to the task named in its `/moira NNN` prompt; otherwise to the `doing`
+ * Live state of Claude sessions, written per session by ~/.claude/hooks/kanban-activity.sh.
+ * A session belongs to the task named in its `/kanban NNN` prompt; otherwise to the `doing`
  * task of the project it runs in, or to the only `doing` task.
  */
-export async function listActivity(): Promise<MoiraActivity[]> {
+export async function listActivity(): Promise<KanbanActivity[]> {
   let names: string[] = [];
   try {
     names = (await readdir(ACTIVITY_DIR)).filter(n => n.endsWith('.json'));
@@ -234,7 +234,7 @@ export async function listActivity(): Promise<MoiraActivity[]> {
   }
   const doing = (await listTasks()).tasks.filter(t => t.status === 'doing');
   const now = Date.now() / 1000;
-  const result: MoiraActivity[] = [];
+  const result: KanbanActivity[] = [];
   for (const name of names) {
     try {
       const a = JSON.parse(await readFile(join(ACTIVITY_DIR, name), 'utf-8'));

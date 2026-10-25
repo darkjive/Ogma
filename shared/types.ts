@@ -131,11 +131,11 @@ export interface WeatherData {
   }>;
 }
 
-// ---- Moira board (/api/moira/tasks) ----
+// ---- Kanban board (/api/kanban/tasks) ----
 
-export type MoiraStatus = 'todo' | 'doing' | 'review' | 'done';
+export type KanbanStatus = 'todo' | 'doing' | 'review' | 'done';
 
-export interface MoiraActivity {
+export interface KanbanActivity {
   number: string;
   state: 'working' | 'idle';
   summary: string;
@@ -143,11 +143,11 @@ export interface MoiraActivity {
   age: number;
 }
 
-export interface MoiraTask {
+export interface KanbanTask {
   file: string;
   number: string;
   title: string;
-  status: MoiraStatus;
+  status: KanbanStatus;
   project: string;
   created: string;
   body: string;

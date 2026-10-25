@@ -26,7 +26,7 @@
 | **Weather**                                                                                                                        | wttr.in API (proxied through the backend)                                                                        |
 | **Docker Monitoring**                                                                                                              | Docker socket                                                                                                    |
 | **Backups**                                                                                                                        | status files + logs of `_scripts/backup-scripts` (`BACKUP_SCRIPTS_DIR`, `BACKUP_STATE_DIR`), systemd user timers |
-| **Moira Board**                                                                                                                    | task files in `~/.local/share/moira/tasks` (`MOIRA_DIR`)                                                         |
+| **Kanban Board**                                                                                                                    | task files in `~/.local/share/kanban/tasks` (`KANBAN_DIR`)                                                         |
 | **Git Widget**                                                                                                                     | status, pull, push, fetch, commit, bulk operations                                                               |
 | **Web Scraper**                                                                                                                    | Playwright/Chromium (see NixOS note below)                                                                       |
 | **GitHub Stats**                                                                                                                   | GitHub API (set your username in Settings)                                                                       |
@@ -34,7 +34,7 @@
 | **Connectivity Monitor**                                                                                                           | HTTP latency checks to internet endpoints                                                                        |
 | **Network Outage Map**                                                                                                             | visualizes connectivity status                                                                                   |
 
-Moira Board: columns can be hidden, ideas are captured raw (badge "Idee" until `/moira-new NNN` formulates and plans them), plan steps written as `- [ ]` checklist show a progress bar, and the hook `~/.claude/hooks/moira-activity.sh` (registered in `~/.claude/settings.json`) shows what Claude is doing right now on the card. Every card and the detail view has a copy button that puts the matching command on the clipboard (`/moira NNN`, `/moira-review NNN` in review, `/moira-new NNN` for ideas).
+Kanban Board: columns can be hidden, ideas are captured raw (badge "Idee" until `/kanban-new NNN` formulates and plans them), plan steps written as `- [ ]` checklist show a progress bar, and the hook `~/.claude/hooks/kanban-activity.sh` (registered in `~/.claude/settings.json`) shows what Claude is doing right now on the card. Every card and the detail view has a copy button that puts the matching command on the clipboard (`/kanban NNN`, `/kanban-review NNN` in review, `/kanban-new NNN` for ideas).
 
 ### Local-only widgets (no backend)
 

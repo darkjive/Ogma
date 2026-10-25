@@ -47,7 +47,7 @@ import {
   listActivity,
   listProjects,
   startPreview,
-} from './services/moiraTasks.js';
+} from './services/kanbanTasks.js';
 import type { IncomingMessage } from 'http';
 
 // Sensitive system paths that must never be touched by git operations
@@ -228,39 +228,39 @@ const backupActionLimiter = rateLimit({
   message: { error: 'Backup action rate limit exceeded' },
 });
 
-const moiraStatusSchema = z.object({ status: z.enum(['todo', 'doing', 'review', 'done']) });
+const kanbanStatusSchema = z.object({ status: z.enum(['todo', 'doing', 'review', 'done']) });
 
-app.get('/api/moira/activity', generalLimiter, async (_req, res) => {
+app.get('/api/kanban/activity', generalLimiter, async (_req, res) => {
   try {
     res.json(await listActivity());
   } catch (error) {
-    console.error('Failed to list Moira activity:', error);
-    res.status(500).json({ error: 'Failed to list Moira activity' });
+    console.error('Failed to list Kanban activity:', error);
+    res.status(500).json({ error: 'Failed to list Kanban activity' });
   }
 });
 
-app.get('/api/moira/tasks', generalLimiter, async (req, res) => {
+app.get('/api/kanban/tasks', generalLimiter, async (req, res) => {
   try {
     const { tasks, etag } = await listTasks();
     res.set('ETag', etag);
     if (req.get('If-None-Match') === etag) return res.status(304).end();
     res.json(tasks);
   } catch (error) {
-    console.error('Failed to list Moira tasks:', error);
-    res.status(500).json({ error: 'Failed to list Moira tasks' });
+    console.error('Failed to list Kanban tasks:', error);
+    res.status(500).json({ error: 'Failed to list Kanban tasks' });
   }
 });
 
-app.get('/api/moira/projects', generalLimiter, async (_req, res) => {
+app.get('/api/kanban/projects', generalLimiter, async (_req, res) => {
   try {
     res.json(await listProjects());
   } catch (error) {
-    console.error('Failed to list Moira projects:', error);
-    res.status(500).json({ error: 'Failed to list Moira projects' });
+    console.error('Failed to list Kanban projects:', error);
+    res.status(500).json({ error: 'Failed to list Kanban projects' });
   }
 });
 
-const moiraCreateSchema = z.object({
+const kanbanCreateSchema = z.object({
   title: z
     .string()
     .trim()
@@ -276,40 +276,40 @@ const moiraCreateSchema = z.object({
   body: z.string().max(20_000).default(''),
 });
 
-app.post('/api/moira/tasks', generalLimiter, async (req, res) => {
-  const parsed = moiraCreateSchema.safeParse(req.body);
+app.post('/api/kanban/tasks', generalLimiter, async (req, res) => {
+  const parsed = kanbanCreateSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid task' });
   try {
     res.json(await createTask(parsed.data));
   } catch (error) {
-    console.error('Failed to create Moira task:', error);
+    console.error('Failed to create Kanban task:', error);
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
 
-app.post('/api/moira/tasks/:file/status', generalLimiter, async (req, res) => {
-  const parsed = moiraStatusSchema.safeParse(req.body);
+app.post('/api/kanban/tasks/:file/status', generalLimiter, async (req, res) => {
+  const parsed = kanbanStatusSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid status' });
   try {
     await setStatus(String(req.params.file), parsed.data.status);
     res.json({ ok: true });
   } catch (error) {
-    console.error('Failed to set Moira status:', error);
+    console.error('Failed to set Kanban status:', error);
     res.status(400).json({ error: 'Failed to set status' });
   }
 });
 
-app.post('/api/moira/tasks/:file/archive', generalLimiter, async (req, res) => {
+app.post('/api/kanban/tasks/:file/archive', generalLimiter, async (req, res) => {
   try {
     await archiveTask(String(req.params.file));
     res.json({ ok: true });
   } catch (error) {
-    console.error('Failed to archive Moira task:', error);
+    console.error('Failed to archive Kanban task:', error);
     res.status(400).json({ error: 'Failed to archive task' });
   }
 });
 
-app.post('/api/moira/tasks/:file/preview', generalLimiter, async (req, res) => {
+app.post('/api/kanban/tasks/:file/preview', generalLimiter, async (req, res) => {
   try {
     res.json({ url: await startPreview(String(req.params.file)) });
   } catch (error) {

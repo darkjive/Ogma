@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Archive, Copy, ExternalLink, Inbox, Plus, X } from 'lucide-react';
-import type { MoiraActivity, MoiraStatus, MoiraTask } from '../../shared/types';
+import type { KanbanActivity, KanbanStatus, KanbanTask } from '../../shared/types';
 import { apiFetch } from '../lib/api';
 import { toast } from '../lib/toast';
 import { useSettingJSON } from '../lib/settings';
 
-const COLUMNS: { status: MoiraStatus; label: string; color: string }[] = [
+const COLUMNS: { status: KanbanStatus; label: string; color: string }[] = [
   { status: 'todo', label: 'Offen', color: 'var(--sig-grey)' },
   { status: 'doing', label: 'In Arbeit', color: 'var(--sig-blue)' },
   { status: 'review', label: 'Review', color: 'var(--sig-yellow)' },
@@ -43,7 +43,7 @@ function NewTaskDialog({
 
   useEffect(() => {
     ref.current?.showModal();
-    apiFetch('/api/moira/projects')
+    apiFetch('/api/kanban/projects')
       .then(r => (r.ok ? r.json() : []))
       .then(setDevProjects)
       .catch(() => {});
@@ -54,7 +54,7 @@ function NewTaskDialog({
     setSaving(true);
     setError('');
     try {
-      const res = await apiFetch('/api/moira/tasks', {
+      const res = await apiFetch('/api/kanban/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, project, body }),
@@ -72,7 +72,7 @@ function NewTaskDialog({
       <form className="ds-dialog-body" onSubmit={submit}>
         <h3 className="ds-dialog-title">Neue Idee</h3>
         <p className="ds-dialog-text">
-          Roh festhalten genügt. Claude formuliert die Idee sauber und plant sie mit /moira-new.
+          Roh festhalten genügt. Claude formuliert die Idee sauber und plant sie mit /kanban-new.
         </p>
         <label className="flex flex-col gap-1">
           <span className="ds-label">Titel</span>
@@ -89,12 +89,12 @@ function NewTaskDialog({
           <span className="ds-label">Projekt</span>
           <input
             className="ds-input"
-            list="moira-projects"
+            list="kanban-projects"
             value={project}
             onChange={e => setProject(e.target.value)}
             maxLength={100}
           />
-          <datalist id="moira-projects">
+          <datalist id="kanban-projects">
             {[...new Set([...devProjects, ...projects])].sort().map(p => (
               <option key={p} value={p} />
             ))}
@@ -149,7 +149,7 @@ const PlanProgress = ({ body, color }: { body: string; color: string }) => {
   );
 };
 
-const LiveActivity = ({ activity }: { activity?: MoiraActivity }) => {
+const LiveActivity = ({ activity }: { activity?: KanbanActivity }) => {
   if (!activity || activity.state !== 'working' || activity.age > ACTIVITY_STALE_S) return null;
   return (
     <span className="flex items-center gap-2 min-w-0 text-xs text-accent">
@@ -160,14 +160,14 @@ const LiveActivity = ({ activity }: { activity?: MoiraActivity }) => {
 };
 
 // Slash command that starts work on the task; copying it is a deliberate act of focusing on one task.
-const moiraCommand = (t: MoiraTask): string | null => {
+const kanbanCommand = (t: KanbanTask): string | null => {
   if (t.status === 'done') return null;
-  if (t.status === 'review') return `/moira-review ${t.number}`;
-  return t.idea ? `/moira-new ${t.number}` : `/moira ${t.number}`;
+  if (t.status === 'review') return `/kanban-review ${t.number}`;
+  return t.idea ? `/kanban-new ${t.number}` : `/kanban ${t.number}`;
 };
 
-const CopyCommand = ({ task }: { task: MoiraTask }) => {
-  const cmd = moiraCommand(task);
+const CopyCommand = ({ task }: { task: KanbanTask }) => {
+  const cmd = kanbanCommand(task);
   if (!cmd) return null;
   return (
     <button
@@ -197,23 +197,23 @@ const ProjectChip = ({ name }: { name: string }) => (
   </span>
 );
 
-export function MoiraBoard() {
-  const [tasks, setTasks] = useState<MoiraTask[]>([]);
+export function KanbanBoard() {
+  const [tasks, setTasks] = useState<KanbanTask[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [project, setProject] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [hidden, setHidden] = useSettingJSON<MoiraStatus[]>('moira-hidden-columns', []);
+  const [hidden, setHidden] = useSettingJSON<KanbanStatus[]>('kanban-hidden-columns', []);
   const [dragging, setDragging] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<MoiraStatus | null>(null);
-  const [activity, setActivity] = useState<MoiraActivity[]>([]);
+  const [dropTarget, setDropTarget] = useState<KanbanStatus | null>(null);
+  const [activity, setActivity] = useState<KanbanActivity[]>([]);
   const etag = useRef('');
 
   const loadActivity = useCallback(async () => {
     if (document.visibilityState !== 'visible') return;
     try {
-      const res = await apiFetch('/api/moira/activity');
+      const res = await apiFetch('/api/kanban/activity');
       if (res.ok) setActivity(await res.json());
     } catch {
       // the board works without live state
@@ -224,9 +224,9 @@ export function MoiraBoard() {
     if (document.visibilityState !== 'visible') return;
     try {
       const headers: Record<string, string> = etag.current ? { 'If-None-Match': etag.current } : {};
-      const res = await apiFetch('/api/moira/tasks', { headers });
+      const res = await apiFetch('/api/kanban/tasks', { headers });
       if (res.status === 304) return;
-      if (!res.ok) throw new Error('Failed to load Moira tasks');
+      if (!res.ok) throw new Error('Failed to load Kanban tasks');
       etag.current = res.headers.get('ETag') ?? '';
       setTasks(await res.json());
       setError(null);
@@ -250,7 +250,7 @@ export function MoiraBoard() {
   const post = async (file: string, action: string, body?: unknown) => {
     setBusy(true);
     try {
-      const res = await apiFetch(`/api/moira/tasks/${file}/${action}`, {
+      const res = await apiFetch(`/api/kanban/tasks/${file}/${action}`, {
         method: 'POST',
         headers: body ? { 'Content-Type': 'application/json' } : {},
         body: body ? JSON.stringify(body) : undefined,
@@ -266,12 +266,12 @@ export function MoiraBoard() {
     }
   };
 
-  const move = async (task: MoiraTask, delta: number) => {
+  const move = async (task: KanbanTask, delta: number) => {
     const next = COLUMNS[COLUMNS.findIndex(c => c.status === task.status) + delta];
     if (next && (await post(task.file, 'status', { status: next.status }))) await load();
   };
 
-  const drop = async (status: MoiraStatus) => {
+  const drop = async (status: KanbanStatus) => {
     const task = tasks.find(t => t.file === dragging);
     setDragging(null);
     setDropTarget(null);
@@ -281,14 +281,14 @@ export function MoiraBoard() {
     await load();
   };
 
-  const archive = async (task: MoiraTask) => {
+  const archive = async (task: KanbanTask) => {
     if (await post(task.file, 'archive')) {
       setSelected(null);
       await load();
     }
   };
 
-  const openPreview = async (task: MoiraTask) => {
+  const openPreview = async (task: KanbanTask) => {
     toast('Starte Vorschau …', 'info');
     const data = await post(task.file, 'preview');
     if (data?.url) window.open(data.url, '_blank');

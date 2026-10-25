@@ -15,7 +15,7 @@ import { MarkdownEditor } from './components/MarkdownEditor';
 import { SoundManager } from './components/SoundManager';
 import { GitStatus } from './components/GitStatus';
 import { DockerWidget } from './components/DockerWidget';
-import { MoiraBoard } from './components/MoiraBoard';
+import { KanbanBoard } from './components/KanbanBoard';
 import { BackupWidget } from './components/BackupWidget';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useSetting } from './lib/settings';
@@ -63,8 +63,8 @@ interface LayoutItem {
 // columns into a "staircase" — each row's bottom edge lines up cleanly for
 // the next row.
 const defaultLayout = [
-  // Row 1: Moira board (full width, on top)
-  { i: 'moira', x: 0, y: 0, w: 12, h: 5, minW: 6, minH: 4 },
+  // Row 1: Kanban board (full width, on top)
+  { i: 'kanban', x: 0, y: 0, w: 12, h: 5, minW: 6, minH: 4 },
 
   // Row 2: Dev tools
   { i: 'git-status', x: 0, y: 5, w: 6, h: 6, minW: 4, minH: 4 },
@@ -104,7 +104,7 @@ const TABLET_BREAKPOINT = 1280;
 const gridWidth = (viewport: number) => viewport - (viewport < MOBILE_BREAKPOINT ? 24 : 48);
 
 const defaultEnabledWidgets = {
-  moira: true,
+  kanban: true,
   'git-status': true,
   docker: true,
   backups: true,
@@ -130,7 +130,7 @@ interface WidgetHealth {
 }
 
 const widgetConfig = {
-  moira: { name: 'MOIRA', icon: SquareKanban, component: MoiraBoard },
+  kanban: { name: 'KANBAN', icon: SquareKanban, component: KanbanBoard },
   'git-status': { name: 'GIT STATUS', icon: GitBranch, component: GitStatus },
   docker: { name: 'DOCKER', icon: Container, component: DockerWidget },
   backups: { name: 'BACKUPS', icon: HardDriveDownload, component: BackupWidget },
@@ -222,7 +222,7 @@ function migrateLegacyMetrics() {
 // Stale saved layouts (from an older defaultLayout revision) are discarded
 // so users get the fixed layout automatically, without having to know to
 // press "Reset".
-const LAYOUT_VERSION = 7;
+const LAYOUT_VERSION = 8;
 
 function invalidateStaleLayout() {
   try {
@@ -253,13 +253,13 @@ async function checkWidgetHealth(widgetId: string): Promise<WidgetHealth> {
           return { status: 'warning', message: 'Backend server not running' };
         }
 
-      case 'moira':
+      case 'kanban':
         try {
-          const res = await apiFetch('/api/moira/tasks', { signal: AbortSignal.timeout(3000) });
-          if (!res.ok) throw new Error('Moira API not available');
+          const res = await apiFetch('/api/kanban/tasks', { signal: AbortSignal.timeout(3000) });
+          if (!res.ok) throw new Error('Kanban API not available');
           return { status: 'ready' };
         } catch {
-          return { status: 'warning', message: 'Moira API not available' };
+          return { status: 'warning', message: 'Kanban API not available' };
         }
 
       default:
