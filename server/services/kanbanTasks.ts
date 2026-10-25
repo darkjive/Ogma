@@ -223,7 +223,7 @@ export async function startPreview(file: string): Promise<string> {
 /**
  * Live state of Claude sessions, written per session by ~/.claude/hooks/kanban-activity.sh.
  * A session belongs to the task named in its `/kanban NNN` prompt; otherwise to the `doing`
- * task of the project it runs in, or to the only `doing` task.
+ * task of the project it runs in. Sessions matching neither are not shown.
  */
 export async function listActivity(): Promise<KanbanActivity[]> {
   let names: string[] = [];
@@ -239,9 +239,7 @@ export async function listActivity(): Promise<KanbanActivity[]> {
     try {
       const a = JSON.parse(await readFile(join(ACTIVITY_DIR, name), 'utf-8'));
       const inProject = doing.filter(t => t.project && t.project === basename(String(a.cwd ?? '')));
-      const number =
-        a.task ||
-        (inProject.length === 1 ? inProject[0].number : doing.length === 1 ? doing[0].number : '');
+      const number = a.task || (inProject.length === 1 ? inProject[0].number : '');
       if (!number) continue;
       result.push({
         number,
