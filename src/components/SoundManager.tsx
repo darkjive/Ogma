@@ -43,10 +43,10 @@ export function SoundManager() {
   if (!audioAvailable) {
     return (
       <div
-        className="p-2 text-gray-600"
+        className="p-2 text-text-muted"
         title={`Ambiance audio missing — add a file at public${AUDIO_SRC}`}
       >
-        <VolumeX className="w-5 h-5" />
+        <VolumeX className="w-4 h-4" />
       </div>
     );
   }
@@ -67,9 +67,9 @@ export function SoundManager() {
         title={soundEnabled ? 'Mute Ambiance' : 'Play Ambiance'}
       >
         {soundEnabled ? (
-          <Volume2 className="w-5 h-5 text-accent" />
+          <Volume2 className="w-4 h-4 text-accent" />
         ) : (
-          <VolumeX className="w-5 h-5 text-gray-500" />
+          <VolumeX className="w-4 h-4 text-text-muted" />
         )}
       </button>
 
@@ -84,7 +84,7 @@ export function SoundManager() {
             onChange={handleVolumeChange}
             className="w-20 accent-accent"
           />
-          <span className="text-xs text-gray-400 w-8">{Math.round(volume * 100)}%</span>
+          <span className="text-xs text-text-dim w-8">{Math.round(volume * 100)}%</span>
         </div>
       )}
     </div>

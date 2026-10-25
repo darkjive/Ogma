@@ -1,15 +1,6 @@
-import { useState, useEffect } from 'react';
-import {
-  X,
-  Plus,
-  Trash2,
-  Volume2,
-  Cloud,
-  Github,
-  GitBranch,
-  Settings as SettingsIcon,
-  KeyRound,
-} from 'lucide-react';
+import { useState } from 'react';
+import { Dialog } from './Dialog';
+import { Plus, Trash2, Cloud, Github, GitBranch, KeyRound } from 'lucide-react';
 import { getSetting, getSettingJSON, setSetting, setSettingRaw } from '../lib/settings';
 import { getDashboardToken, setDashboardToken } from '../lib/api';
 
@@ -20,82 +11,33 @@ interface SettingsPanelProps {
 
 type SectionId = 'general' | 'sound' | 'git';
 
-const SECTIONS: Array<{ id: SectionId; label: string; icon: typeof X }> = [
-  { id: 'general', label: 'General', icon: SettingsIcon },
-  { id: 'sound', label: 'Sound', icon: Volume2 },
-  { id: 'git', label: 'Git Roots', icon: GitBranch },
+const SECTIONS: Array<{ id: SectionId; label: string }> = [
+  { id: 'general', label: 'General' },
+  { id: 'sound', label: 'Sound' },
+  { id: 'git', label: 'Git Roots' },
 ];
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [section, setSection] = useState<SectionId>('general');
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-4xl h-[80vh] bg-elevated border border-accent rounded-lg flex flex-col overflow-hidden"
-        style={{ boxShadow: 'var(--shadow-card)' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-bg">
-          <div className="flex items-center gap-3">
-            <SettingsIcon className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-bold">SETTINGS</h2>
-          </div>
+    <Dialog open={open} onClose={onClose} title="Einstellungen" wide>
+      <div className="ds-segment self-start" role="group" aria-label="Bereich">
+        {SECTIONS.map(s => (
           <button
-            onClick={onClose}
-            className="ds-btn ghost icon"
-            title="Close (Esc)"
+            key={s.id}
+            type="button"
+            onClick={() => setSection(s.id)}
+            aria-pressed={section === s.id}
           >
-            <X className="w-5 h-5" />
+            {s.label}
           </button>
-        </div>
-
-        {/* Body: Sidebar + Content */}
-        <div className="flex-1 flex min-h-0">
-          <nav className="w-48 border-r border-line bg-bg/50 overflow-y-auto p-2">
-            {SECTIONS.map(s => {
-              const Icon = s.icon;
-              const active = section === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setSection(s.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm font-mono transition-all mb-1 ${
-                    active
-                      ? 'bg-accent/20 text-accent border border-accent/50'
-                      : 'text-gray-400 hover:bg-accent/10 hover:text-accent border border-transparent'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{s.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="flex-1 overflow-y-auto p-6">
-            {section === 'general' && <GeneralSection />}
-            {section === 'sound' && <SoundSection />}
-            {section === 'git' && <GitSection />}
-          </div>
-        </div>
+        ))}
       </div>
-    </div>
+      {section === 'general' && <GeneralSection />}
+      {section === 'sound' && <SoundSection />}
+      {section === 'git' && <GitSection />}
+    </Dialog>
   );
 }
 
@@ -107,22 +49,21 @@ function SectionHeader({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="mb-5">
       <h3 className="text-sm font-bold text-accent">{title}</h3>
-      {hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
+      {hint && <p className="text-xs text-text-muted mt-1">{hint}</p>}
     </div>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block">
-      <span className="block text-xs font-mono text-gray-400 mb-1">{label}</span>
+    <label className="flex flex-col gap-1">
+      <span className="ds-label">{label}</span>
       {children}
     </label>
   );
 }
 
-const inputClass =
-  'w-full px-3 py-2 bg-bg border border-line rounded text-sm text-accent font-mono focus:border-accent focus:outline-none';
+const inputClass = 'ds-input w-full';
 
 // ============================================================
 // General: GitHub Username + Weather Location
@@ -141,7 +82,7 @@ function GeneralSection() {
 
       <Field label="GITHUB USERNAME">
         <div className="flex items-center gap-2">
-          <Github className="w-4 h-4 text-gray-500 shrink-0" />
+          <Github className="w-4 h-4 text-text-muted shrink-0" />
           <input
             type="text"
             value={githubUsername}
@@ -160,7 +101,7 @@ function GeneralSection() {
 
       <Field label="WEATHER LOCATION">
         <div className="flex items-center gap-2">
-          <Cloud className="w-4 h-4 text-gray-500 shrink-0" />
+          <Cloud className="w-4 h-4 text-text-muted shrink-0" />
           <input
             type="text"
             value={weatherLocation}
@@ -179,7 +120,7 @@ function GeneralSection() {
 
       <Field label="DASHBOARD TOKEN">
         <div className="flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-gray-500 shrink-0" />
+          <KeyRound className="w-4 h-4 text-text-muted shrink-0" />
           <input
             type="password"
             value={dashboardToken}
@@ -195,11 +136,11 @@ function GeneralSection() {
         </div>
       </Field>
 
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-text-muted">
         GitHub username and weather use public data only. The dashboard token is sent as{' '}
         <code className="text-accent">X-Dashboard-Token</code> on every API request and is only
-        required if you set <code className="text-accent">DASHBOARD_TOKEN</code> on a
-        LAN-exposed backend.
+        required if you set <code className="text-accent">DASHBOARD_TOKEN</code> on a LAN-exposed
+        backend.
       </p>
     </div>
   );
@@ -232,22 +173,16 @@ function SoundSection() {
 
       <div className="flex items-center justify-between p-3 bg-bg border border-line rounded">
         <div>
-          <div className="text-sm font-mono text-gray-200">Ambiance Enabled</div>
-          <div className="text-xs text-gray-500 mt-1">Toggle background sound playback.</div>
+          <div className="text-sm font-mono text-text">Ambiance Enabled</div>
+          <div className="text-xs text-text-muted mt-1">Toggle background sound playback.</div>
         </div>
-        <button
-          onClick={toggle}
-          className={`relative w-12 h-6 rounded-full transition-all ${
-            isEnabled ? 'bg-accent/80' : 'bg-line'
-          }`}
-          title={isEnabled ? 'Disable' : 'Enable'}
-        >
-          <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-bg transition-all ${
-              isEnabled ? 'translate-x-6' : ''
-            }`}
-          />
-        </button>
+        <input
+          type="checkbox"
+          className="ds-switch"
+          checked={isEnabled}
+          onChange={toggle}
+          aria-label="Ambiance Enabled"
+        />
       </div>
 
       <Field label={`VOLUME — ${Math.round(parseFloat(volume) * 100)}%`}>
@@ -298,16 +233,13 @@ function ListEditor<T>({
   return (
     <div className="space-y-2">
       {items.length === 0 && (
-        <div className="text-xs text-gray-500 italic px-3 py-4 border border-dashed border-line rounded text-center">
+        <div className="text-xs text-text-muted italic px-3 py-4 border border-dashed border-line rounded text-center">
           {emptyLabel}
         </div>
       )}
 
       {items.map((item, idx) => (
-        <div
-          key={idx}
-          className="flex items-start gap-2 p-2 bg-bg border border-line rounded"
-        >
+        <div key={idx} className="flex items-start gap-2 p-2 bg-bg border border-line rounded">
           <div className="flex-1">
             {renderItem(
               item,
@@ -315,21 +247,14 @@ function ListEditor<T>({
               () => remove(idx)
             )}
           </div>
-          <button
-            onClick={() => remove(idx)}
-            className="ds-btn danger sm icon"
-            title="Remove"
-          >
+          <button onClick={() => remove(idx)} className="ds-btn danger sm icon" title="Remove">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ))}
 
-      <button
-        onClick={add}
-        className="ds-btn sm"
-      >
-        <Plus className="w-3 h-3" />
+      <button onClick={add} className="ds-btn sm">
+        <Plus className="w-3.5 h-3.5" />
         <span>{addLabel}</span>
       </button>
     </div>
@@ -352,7 +277,7 @@ function GitSection() {
         buildNew={() => ''}
         renderItem={(root, replace) => (
           <div className="flex items-center gap-2">
-            <GitBranch className="w-4 h-4 text-gray-500 shrink-0" />
+            <GitBranch className="w-4 h-4 text-text-muted shrink-0" />
             <input
               type="text"
               value={root}

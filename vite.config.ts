@@ -20,6 +20,11 @@ export default defineConfig({
         target: `http://localhost:${backendPort}`,
         changeOrigin: true,
       },
+      // Designsystem runtime assets (sounds.js, sounds, icon sprite) come from the backend
+      '/ds': {
+        target: `http://localhost:${backendPort}`,
+        changeOrigin: true,
+      },
       // Proxy WebSocket connections
       '/ws': {
         target: `ws://localhost:${backendPort}`,

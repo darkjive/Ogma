@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmDialog } from './Dialog';
 import { FileText, Download, Copy, Eye, Code, Trash2, Wand2 } from 'lucide-react';
 
 export function MarkdownEditor() {
@@ -8,6 +9,7 @@ export function MarkdownEditor() {
   });
   const [plainText, setPlainText] = useState('');
   const [inputMode, setInputMode] = useState<'markdown' | 'plaintext'>('markdown');
+  const [confirmClear, setConfirmClear] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split');
 
   const saveToLocalStorage = (content: string) => {
@@ -30,12 +32,10 @@ export function MarkdownEditor() {
   };
 
   const clearContent = () => {
-    if (confirm('Clear all content?')) {
-      if (inputMode === 'markdown') {
-        saveToLocalStorage('');
-      } else {
-        setPlainText('');
-      }
+    if (inputMode === 'markdown') {
+      saveToLocalStorage('');
+    } else {
+      setPlainText('');
     }
   };
 
@@ -130,18 +130,18 @@ export function MarkdownEditor() {
     );
 
     // Italic
-    html = html.replace(/\*(.*?)\*/gim, '<em class="italic text-gray-300">$1</em>');
+    html = html.replace(/\*(.*?)\*/gim, '<em class="italic text-text">$1</em>');
 
     // Code blocks
     html = html.replace(
       /```([\s\S]*?)```/gim,
-      '<pre class="bg-bg border border-line rounded p-3 my-3 overflow-x-auto"><code class="text-sm font-mono text-green-300">$1</code></pre>'
+      '<pre class="bg-bg border border-line rounded p-3 my-3 overflow-x-auto"><code class="text-sm font-mono text-good">$1</code></pre>'
     );
 
     // Inline code
     html = html.replace(
       /`(.*?)`/gim,
-      '<code class="bg-bg px-1 py-0.5 rounded text-sm font-mono text-green-300">$1</code>'
+      '<code class="bg-bg px-1 py-0.5 rounded text-sm font-mono text-good">$1</code>'
     );
 
     // Lists
@@ -165,8 +165,8 @@ export function MarkdownEditor() {
     <div className="h-full flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-accent" />
-          <h3 className="text-lg font-bold">MARKDOWN EDITOR</h3>
+          <FileText className="w-4 h-4 text-accent" />
+          <h3 className="text-base font-bold">MARKDOWN EDITOR</h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Input Mode Toggle */}
@@ -174,7 +174,7 @@ export function MarkdownEditor() {
             <button
               onClick={() => setInputMode('markdown')}
               className={`px-2 py-1 rounded text-xs transition-all ${
-                inputMode === 'markdown' ? 'bg-accent text-bg' : 'text-gray-400 hover:text-accent'
+                inputMode === 'markdown' ? 'bg-accent text-bg' : 'text-text-dim hover:text-accent'
               }`}
             >
               MD
@@ -182,7 +182,7 @@ export function MarkdownEditor() {
             <button
               onClick={() => setInputMode('plaintext')}
               className={`px-2 py-1 rounded text-xs transition-all ${
-                inputMode === 'plaintext' ? 'bg-accent text-bg' : 'text-gray-400 hover:text-accent'
+                inputMode === 'plaintext' ? 'bg-accent text-bg' : 'text-text-dim hover:text-accent'
               }`}
             >
               TEXT
@@ -220,21 +220,17 @@ export function MarkdownEditor() {
               className="ds-btn ghost icon"
               title="Copy to Clipboard"
             >
-              <Copy className="w-4 h-4 text-gray-400" />
+              <Copy className="w-4 h-4 text-text-dim" />
+            </button>
+            <button onClick={downloadMarkdown} className="ds-btn ghost icon" title="Download">
+              <Download className="w-4 h-4 text-text-dim" />
             </button>
             <button
-              onClick={downloadMarkdown}
-              className="ds-btn ghost icon"
-              title="Download"
-            >
-              <Download className="w-4 h-4 text-gray-400" />
-            </button>
-            <button
-              onClick={clearContent}
+              onClick={() => setConfirmClear(true)}
               className="ds-btn ghost icon"
               title="Clear All"
             >
-              <Trash2 className="w-4 h-4 text-red-400" />
+              <Trash2 className="w-4 h-4 text-bad" />
             </button>
           </div>
         </div>
@@ -242,10 +238,7 @@ export function MarkdownEditor() {
 
       {/* Convert Button (Plain Text Mode) */}
       {inputMode === 'plaintext' && plainText.trim() && (
-        <button
-          onClick={convertToMarkdown}
-          className="ds-btn primary block mb-3"
-        >
+        <button onClick={convertToMarkdown} className="ds-btn primary block mb-3">
           <Wand2 className="w-4 h-4" />
           <span>CONVERT TO MARKDOWN</span>
         </button>
@@ -299,11 +292,19 @@ export function MarkdownEditor() {
       </div>
 
       {/* Stats */}
-      <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+      <div className="mt-3 flex items-center gap-4 text-xs text-text-muted">
         <span>{markdown.length} characters</span>
         <span>{markdown.split(/\s+/).filter(w => w).length} words</span>
         <span>{markdown.split('\n').length} lines</span>
       </div>
+      <ConfirmDialog
+        open={confirmClear}
+        title="Inhalt löschen?"
+        text="Der gesamte Text wird entfernt."
+        confirmLabel="Löschen"
+        onConfirm={clearContent}
+        onClose={() => setConfirmClear(false)}
+      />
     </div>
   );
 }

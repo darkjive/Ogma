@@ -300,9 +300,7 @@ export function KanbanBoard() {
   const detail = tasks.find(t => t.file === selected);
 
   if (error && tasks.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-red-400 text-sm">{error}</div>
-    );
+    return <div className="flex items-center justify-center h-full text-bad text-sm">{error}</div>;
   }
 
   if (detail) {
@@ -515,7 +513,7 @@ export function KanbanBoard() {
                 )}
                 {items.length === 0 && (
                   <div className="flex flex-col items-center gap-1 py-6 text-xs text-text-muted border border-dashed border-line rounded-md">
-                    <Inbox className="w-5 h-5" />
+                    <Inbox className="w-4 h-4" />
                     Keine Aufgaben
                   </div>
                 )}

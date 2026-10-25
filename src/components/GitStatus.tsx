@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Dialog } from './Dialog';
 import {
   ArrowUp,
   ArrowDown,
@@ -40,15 +41,15 @@ const STATE_META: Record<RepoState, { label: string; dot: string; text: string; 
   {
     clean: {
       label: 'clean',
-      dot: 'bg-green-400',
-      text: 'text-green-400',
-      border: 'border-green-500/40',
+      dot: 'bg-good',
+      text: 'text-good',
+      border: 'border-good/40',
     },
     dirty: {
       label: 'dirty',
-      dot: 'bg-yellow-400',
-      text: 'text-yellow-400',
-      border: 'border-yellow-500/40',
+      dot: 'bg-warn',
+      text: 'text-warn',
+      border: 'border-warn/40',
     },
     ahead: {
       label: 'ahead',
@@ -58,29 +59,29 @@ const STATE_META: Record<RepoState, { label: string; dot: string; text: string; 
     },
     behind: {
       label: 'behind',
-      dot: 'bg-orange-400',
-      text: 'text-orange-400',
-      border: 'border-orange-500/40',
+      dot: 'bg-warn',
+      text: 'text-warn',
+      border: 'border-warn/40',
     },
     diverged: {
       label: 'diverged',
-      dot: 'bg-purple-400',
-      text: 'text-purple-400',
-      border: 'border-purple-500/40',
+      dot: 'bg-[var(--cat-5)]',
+      text: 'text-[var(--cat-5)]',
+      border: 'border-[var(--cat-5)]/40',
     },
     'no-upstream': {
       label: 'no upstream',
-      dot: 'bg-gray-500',
-      text: 'text-gray-500',
-      border: 'border-gray-600/40',
+      dot: 'bg-text-muted',
+      text: 'text-text-muted',
+      border: 'border-line-strong/40',
     },
     conflict: {
       label: 'conflict',
-      dot: 'bg-red-500',
-      text: 'text-red-400',
-      border: 'border-red-500/40',
+      dot: 'bg-bad',
+      text: 'text-bad',
+      border: 'border-bad/40',
     },
-    error: { label: 'error', dot: 'bg-red-700', text: 'text-red-500', border: 'border-red-700/40' },
+    error: { label: 'error', dot: 'bg-bad', text: 'text-bad', border: 'border-bad/40' },
   };
 
 function matchesFilter(repo: RepoSummary, filter: FilterKey): boolean {
@@ -392,8 +393,10 @@ export function GitStatus() {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-4">
         <FolderGit2 className="w-10 h-12 text-accent mb-3" />
-        <h3 className="text-sm font-bold text-gray-200 mb-1">No Dev roots configured</h3>
-        <p className="text-xs text-gray-500 mb-4">Add a directory to scan for git repositories.</p>
+        <h3 className="text-sm font-bold text-text mb-1">Keine Dev-Ordner konfiguriert</h3>
+        <p className="text-xs text-text-muted mb-4">
+          Ordner hinzufügen, der nach Git-Repositories durchsucht wird.
+        </p>
         <div className="w-full max-w-sm">
           <input
             type="text"
@@ -401,7 +404,7 @@ export function GitStatus() {
             onChange={e => setNewRoot(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addRoot()}
             placeholder="/home/user/Dev"
-            className="w-full px-3 py-2 bg-bg border border-line text-gray-300 text-xs rounded font-mono mb-2"
+            className="w-full px-3 py-2 bg-bg border border-line text-text text-xs rounded font-mono mb-2"
             autoFocus
           />
           <button onClick={addRoot} className="ds-btn primary block">
@@ -419,14 +422,19 @@ export function GitStatus() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <FolderGit2 className="w-4 h-4 text-accent" />
-            <span className="text-xs font-bold text-gray-200">
+            <span className="text-xs font-bold text-text">
               {repos.length} repo{repos.length === 1 ? '' : 's'}
             </span>
-            <span className="text-xs text-gray-600">·</span>
-            <span className="text-xs text-gray-500">{timeAgo(lastScan)}</span>
+            <span className="text-xs text-text-muted">·</span>
+            <span className="text-xs text-text-muted">{timeAgo(lastScan)}</span>
           </div>
-          <button onClick={scan} disabled={scanning} className="ds-btn sm icon" title="Rescan">
-            <RefreshCw className={`w-3.5 h-3.5 ${scanning ? 'animate-spin' : ''}`} />
+          <button
+            onClick={scan}
+            disabled={scanning}
+            className={`ds-btn sm icon${scanning ? ' busy' : ''}`}
+            title="Rescan"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -435,24 +443,24 @@ export function GitStatus() {
           {roots.map(r => (
             <span
               key={r}
-              className="inline-flex items-center gap-1 px-2 py-0.5 bg-elevated border border-line rounded text-xs text-gray-400 font-mono max-w-36 truncate"
+              className="inline-flex items-center gap-1 px-2 py-0.5 bg-elevated border border-line rounded text-xs text-text-dim font-mono max-w-36 truncate"
               title={r}
             >
               {r.split('/').pop() || r}
               <button
                 onClick={() => removeRoot(r)}
-                className="text-gray-600 hover:text-red-400"
+                className="text-text-muted hover:text-bad"
                 title={`Remove ${r}`}
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </span>
           ))}
           <button
             onClick={() => setShowAddRoot(!showAddRoot)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 border border-dashed border-line rounded text-xs text-gray-500 hover:text-accent hover:border-accent"
+            className="inline-flex items-center gap-1 px-2 py-0.5 border border-dashed border-line rounded text-xs text-text-muted hover:text-accent hover:border-accent"
           >
-            <Plus className="w-3 h-3" /> root
+            <Plus className="w-3.5 h-3.5" /> root
           </button>
         </div>
 
@@ -464,7 +472,7 @@ export function GitStatus() {
               onChange={e => setNewRoot(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addRoot()}
               placeholder="/home/user/Dev"
-              className="flex-1 px-2 py-1 bg-bg border border-line text-gray-300 text-xs rounded font-mono"
+              className="flex-1 px-2 py-1 bg-bg border border-line text-text text-xs rounded font-mono"
               autoFocus
             />
             <button onClick={addRoot} className="ds-btn primary sm">
@@ -475,29 +483,29 @@ export function GitStatus() {
                 setShowAddRoot(false);
                 setNewRoot('');
               }}
-              className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs"
+              className="px-2 py-1 bg-active text-text rounded text-xs"
             >
-              Cancel
+              Abbrechen
             </button>
           </div>
         )}
 
-        {scanError && <div className="mt-2 text-xs text-red-400">Scan error: {scanError}</div>}
+        {scanError && <div className="mt-2 text-xs text-bad">Scan error: {scanError}</div>}
       </div>
 
       {/* ---- Stat strip ---- */}
       <div className="flex flex-wrap items-center gap-x-2 px-3 py-1.5 border-b border-line text-xs flex-shrink-0">
-        <span className="text-green-400">{stats.clean} clean</span>
-        <span className="text-gray-700">·</span>
-        <span className="text-yellow-400">{stats.dirty} dirty</span>
-        <span className="text-gray-700">·</span>
+        <span className="text-good">{stats.clean} clean</span>
+        <span className="text-text-muted">·</span>
+        <span className="text-warn">{stats.dirty} dirty</span>
+        <span className="text-text-muted">·</span>
         <span className="text-accent">{stats.ahead} ahead</span>
-        <span className="text-gray-700">·</span>
-        <span className="text-orange-400">{stats.behind} behind</span>
+        <span className="text-text-muted">·</span>
+        <span className="text-warn">{stats.behind} behind</span>
         {stats.conflict > 0 && (
           <>
-            <span className="text-gray-700">·</span>
-            <span className="text-red-400">{stats.conflict} conflict</span>
+            <span className="text-text-muted">·</span>
+            <span className="text-bad">{stats.conflict} conflict</span>
           </>
         )}
       </div>
@@ -512,19 +520,19 @@ export function GitStatus() {
               className={`px-2 py-0.5 rounded text-xs border transition-colors ${
                 filter === f
                   ? 'border-accent text-accent bg-accent/10'
-                  : 'border-line text-gray-500 hover:text-gray-300'
+                  : 'border-line text-text-muted hover:text-text'
               }`}
             >
               {f}
             </button>
           ))}
           <div className="ml-auto relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-600" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="search"
-              className="pl-7 pr-2 py-0.5 bg-bg border border-line text-gray-300 text-xs rounded w-32"
+              className="pl-7 pr-2 py-0.5 bg-bg border border-line text-text text-xs rounded w-32"
             />
           </div>
         </div>
@@ -533,53 +541,37 @@ export function GitStatus() {
           <button
             onClick={() => openConfirm('fetch')}
             disabled={bulkLoading !== null}
-            className="ds-btn sm"
+            className={`ds-btn sm${bulkLoading === 'fetch' ? ' busy' : ''}`}
             title="Fetch all filtered (git fetch --all --prune)"
           >
-            {bulkLoading === 'fetch' ? (
-              <RefreshCw className="w-3 h-3 animate-spin" />
-            ) : (
-              <Cloud className="w-3 h-3" />
-            )}
+            <Cloud className="w-3.5 h-3.5" />
             <span className="hidden @sm:inline">Fetch</span>
           </button>
           <button
             onClick={() => openConfirm('pull')}
             disabled={bulkLoading !== null}
-            className="ds-btn sm"
+            className={`ds-btn sm${bulkLoading === 'pull' ? ' busy' : ''}`}
             title="Pull all filtered"
           >
-            {bulkLoading === 'pull' ? (
-              <RefreshCw className="w-3 h-3 animate-spin" />
-            ) : (
-              <Download className="w-3 h-3" />
-            )}
+            <Download className="w-3.5 h-3.5" />
             <span className="hidden @sm:inline">Pull</span>
           </button>
           <button
             onClick={() => openConfirm('push')}
             disabled={bulkLoading !== null}
-            className="ds-btn sm"
+            className={`ds-btn sm${bulkLoading === 'push' ? ' busy' : ''}`}
             title="Push all filtered"
           >
-            {bulkLoading === 'push' ? (
-              <RefreshCw className="w-3 h-3 animate-spin" />
-            ) : (
-              <Upload className="w-3 h-3" />
-            )}
+            <Upload className="w-3.5 h-3.5" />
             <span className="hidden @sm:inline">Push</span>
           </button>
           <button
             onClick={() => setBulkCommitOpen(true)}
             disabled={bulkLoading !== null}
-            className="ds-btn sm"
+            className={`ds-btn sm${bulkLoading === 'commit' ? ' busy' : ''}`}
             title="Commit all dirty repos with one message"
           >
-            {bulkLoading === 'commit' ? (
-              <RefreshCw className="w-3 h-3 animate-spin" />
-            ) : (
-              <GitCommit className="w-3 h-3" />
-            )}
+            <GitCommit className="w-3.5 h-3.5" />
             <span className="hidden @sm:inline">Commit</span>
           </button>
         </div>
@@ -588,12 +580,12 @@ export function GitStatus() {
       {/* ---- Repo list ---- */}
       <div className="flex-1 overflow-y-auto">
         {filteredRepos.length === 0 && (
-          <div className="p-4 text-center text-xs text-gray-600">
+          <div className="p-4 text-center text-xs text-text-muted">
             {repos.length === 0
               ? scanning
-                ? 'Scanning...'
-                : 'No repos found'
-              : 'No repos match filter'}
+                ? 'Suche läuft …'
+                : 'Keine Repositories gefunden'
+              : 'Kein Repository passt zum Filter'}
           </div>
         )}
 
@@ -609,35 +601,35 @@ export function GitStatus() {
                 className="w-full text-left px-3 py-2 hover:bg-elevated/50 flex items-center gap-2"
               >
                 <ChevronRight
-                  className={`w-3 h-3 text-gray-600 flex-shrink-0 transition-transform ${
+                  className={`w-3.5 h-3.5 text-text-muted flex-shrink-0 transition-transform ${
                     isExpanded ? 'rotate-90' : ''
                   }`}
                 />
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${meta.dot}`} />
-                <span className="text-xs text-gray-200 font-mono truncate flex-1">{repo.name}</span>
+                <span className="text-xs text-text font-mono truncate flex-1">{repo.name}</span>
 
                 {repo.hasUpstream ? null : (
                   <span title="No upstream" className="flex-shrink-0">
-                    <CloudOff className="w-3 h-3 text-gray-600" />
+                    <CloudOff className="w-3.5 h-3.5 text-text-muted" />
                   </span>
                 )}
                 {repo.ahead > 0 && (
                   <span className="inline-flex items-center gap-0.5 text-xs text-accent">
-                    <ArrowUp className="w-3 h-3" />
+                    <ArrowUp className="w-3.5 h-3.5" />
                     {repo.ahead}
                   </span>
                 )}
                 {repo.behind > 0 && (
-                  <span className="inline-flex items-center gap-0.5 text-xs text-orange-400">
-                    <ArrowDown className="w-3 h-3" />
+                  <span className="inline-flex items-center gap-0.5 text-xs text-warn">
+                    <ArrowDown className="w-3.5 h-3.5" />
                     {repo.behind}
                   </span>
                 )}
                 {repo.changedFiles > 0 && (
-                  <span className="text-xs text-yellow-400">+{repo.changedFiles}</span>
+                  <span className="text-xs text-warn">+{repo.changedFiles}</span>
                 )}
                 {repo.branch && (
-                  <span className="text-xs text-gray-500 font-mono hidden @sm:inline">
+                  <span className="text-xs text-text-muted font-mono hidden @sm:inline">
                     {repo.branch}
                   </span>
                 )}
@@ -646,20 +638,20 @@ export function GitStatus() {
               {/* Expanded detail */}
               {isExpanded && (
                 <div className="px-3 pb-3 bg-bg/40">
-                  <div className="text-xs text-gray-600 font-mono mb-2 truncate">{repo.path}</div>
+                  <div className="text-xs text-text-muted font-mono mb-2 truncate">{repo.path}</div>
 
                   {repo.state === 'conflict' && (
-                    <div className="flex items-center gap-2 text-xs text-red-400 mb-2 p-2 border border-red-500/30 bg-red-900/10 rounded">
-                      <AlertTriangle className="w-3 h-3" />
+                    <div className="flex items-center gap-2 text-xs text-bad mb-2 p-2 border border-bad/30 bg-bad/10 rounded">
+                      <AlertTriangle className="w-3.5 h-3.5" />
                       Merge conflict — resolve manually, skipped by bulk ops
                     </div>
                   )}
 
                   {repo.lastCommit && (
-                    <div className="text-xs text-gray-400 mb-2">
+                    <div className="text-xs text-text-dim mb-2">
                       <span className="font-mono text-accent">{repo.lastCommit.hash}</span>{' '}
                       {repo.lastCommit.message}
-                      <span className="text-gray-600">
+                      <span className="text-text-muted">
                         {' '}
                         — {repo.lastCommit.author} · {repo.lastCommit.date}
                       </span>
@@ -671,37 +663,25 @@ export function GitStatus() {
                     <button
                       onClick={() => runRepoAction(repo.path, 'fetch')}
                       disabled={!!loading || !repo.hasUpstream}
-                      className="ds-btn sm"
+                      className={`ds-btn sm${loading === 'fetch' ? ' busy' : ''}`}
                     >
-                      {loading === 'fetch' ? (
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Cloud className="w-3 h-3" />
-                      )}
+                      <Cloud className="w-3.5 h-3.5" />
                       Fetch
                     </button>
                     <button
                       onClick={() => runRepoAction(repo.path, 'pull')}
                       disabled={!!loading || !repo.hasUpstream}
-                      className="ds-btn sm"
+                      className={`ds-btn sm${loading === 'pull' ? ' busy' : ''}`}
                     >
-                      {loading === 'pull' ? (
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Download className="w-3 h-3" />
-                      )}
+                      <Download className="w-3.5 h-3.5" />
                       Pull
                     </button>
                     <button
                       onClick={() => runRepoAction(repo.path, 'push')}
                       disabled={!!loading || !repo.hasUpstream}
-                      className="ds-btn sm"
+                      className={`ds-btn sm${loading === 'push' ? ' busy' : ''}`}
                     >
-                      {loading === 'push' ? (
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Upload className="w-3 h-3" />
-                      )}
+                      <Upload className="w-3.5 h-3.5" />
                       Push
                     </button>
                   </div>
@@ -713,7 +693,7 @@ export function GitStatus() {
                       disabled={repo.changedFiles === 0}
                       className="ds-btn sm block"
                     >
-                      <GitCommit className="w-3 h-3" />
+                      <GitCommit className="w-3.5 h-3.5" />
                       Commit {repo.changedFiles > 0 ? `(${repo.changedFiles})` : ''}
                     </button>
                   ) : (
@@ -730,7 +710,7 @@ export function GitStatus() {
                           }
                         }}
                         placeholder="commit message..."
-                        className="w-full px-2 py-1 bg-bg border border-line text-gray-300 rounded text-xs"
+                        className="w-full px-2 py-1 bg-bg border border-line text-text rounded text-xs"
                         autoFocus
                       />
                       <div className="flex gap-1">
@@ -746,9 +726,9 @@ export function GitStatus() {
                             setShowCommitInput(false);
                             setCommitMsg('');
                           }}
-                          className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs"
+                          className="px-2 py-1 bg-active text-text rounded text-xs"
                         >
-                          Cancel
+                          Abbrechen
                         </button>
                       </div>
                     </div>
@@ -756,14 +736,12 @@ export function GitStatus() {
 
                   {/* File lists */}
                   {detailLoading ? (
-                    <div className="text-xs text-gray-600 mt-2">Loading details...</div>
+                    <div className="text-xs text-text-muted mt-2">Loading details...</div>
                   ) : detail ? (
                     <FileLists detail={detail} />
                   ) : null}
 
-                  {repo.error && (
-                    <div className="text-xs text-red-400 mt-2">Error: {repo.error}</div>
-                  )}
+                  {repo.error && <div className="text-xs text-bad mt-2">Error: {repo.error}</div>}
                 </div>
               )}
             </div>
@@ -773,18 +751,18 @@ export function GitStatus() {
 
       {/* ---- Bulk confirm modal ---- */}
       {confirm && (
-        <Modal title={confirm.title} onClose={() => setConfirm(null)}>
-          <p className="text-sm text-gray-300 mb-3">{confirm.body}</p>
-          <div className="max-h-40 overflow-y-auto mb-3 text-xs text-gray-500 font-mono space-y-0.5">
+        <Dialog open title={confirm.title} onClose={() => setConfirm(null)}>
+          <p className="text-sm text-text mb-3">{confirm.body}</p>
+          <div className="max-h-40 overflow-y-auto mb-3 text-xs text-text-muted font-mono space-y-0.5">
             {confirm.paths.map(p => (
               <div key={p} className="truncate">
                 • {p.split('/').pop()}
               </div>
             ))}
           </div>
-          <div className="flex gap-2 justify-end">
+          <div className="ds-dialog-actions">
             <button onClick={() => setConfirm(null)} className="ds-btn sm">
-              Cancel
+              Abbrechen
             </button>
             <button
               onClick={() => runBulk(confirm.op, confirm.paths)}
@@ -793,13 +771,13 @@ export function GitStatus() {
               {bulkLoading === confirm.op ? 'Running...' : `Confirm ${confirm.op.toUpperCase()}`}
             </button>
           </div>
-        </Modal>
+        </Dialog>
       )}
 
       {/* ---- Bulk commit modal ---- */}
       {bulkCommitOpen && (
-        <Modal title="Bulk Commit" onClose={() => setBulkCommitOpen(false)}>
-          <p className="text-xs text-gray-400 mb-2">
+        <Dialog open title="Bulk Commit" onClose={() => setBulkCommitOpen(false)}>
+          <p className="text-xs text-text-dim mb-2">
             Commit all dirty repos ({filteredRepos.filter(r => r.changedFiles > 0).length}) with
             this message:
           </p>
@@ -807,12 +785,12 @@ export function GitStatus() {
             value={bulkCommitMsg}
             onChange={e => setBulkCommitMsg(e.target.value)}
             placeholder="commit message for all repos..."
-            className="w-full px-2 py-1 bg-bg border border-line text-gray-300 rounded text-xs font-mono mb-2 h-20 resize-none"
+            className="w-full px-2 py-1 bg-bg border border-line text-text rounded text-xs font-mono mb-2 h-20 resize-none"
             autoFocus
           />
-          <div className="flex gap-2 justify-end">
+          <div className="ds-dialog-actions">
             <button onClick={() => setBulkCommitOpen(false)} className="ds-btn sm">
-              Cancel
+              Abbrechen
             </button>
             <button
               onClick={runBulkCommit}
@@ -822,7 +800,7 @@ export function GitStatus() {
               Commit All
             </button>
           </div>
-        </Modal>
+        </Dialog>
       )}
     </div>
   );
@@ -835,8 +813,8 @@ export function GitStatus() {
 function FileLists({ detail }: { detail: GitDetail }) {
   if (!detail.hasChanges) {
     return (
-      <div className="mt-2 p-2 bg-green-900/10 border border-green-500/30 rounded text-xs text-green-400 flex items-center gap-2">
-        <Check className="w-3 h-3" />
+      <div className="mt-2 p-2 bg-good/10 border border-good/30 rounded text-xs text-good flex items-center gap-2">
+        <Check className="w-3.5 h-3.5" />
         Working tree clean
       </div>
     );
@@ -846,29 +824,29 @@ function FileLists({ detail }: { detail: GitDetail }) {
     <div className="mt-2 space-y-1">
       {detail.staged.length > 0 && (
         <FileGroup
-          icon={<FilePlus className="w-3 h-3 text-green-400" />}
+          icon={<FilePlus className="w-3.5 h-3.5 text-good" />}
           label="STAGED"
           count={detail.staged.length}
           files={detail.staged}
-          colorClass="text-green-400 border-green-500/30 bg-green-900/10"
+          colorClass="text-good border-good/30 bg-good/10"
         />
       )}
       {detail.unstaged.length > 0 && (
         <FileGroup
-          icon={<FileText className="w-3 h-3 text-yellow-400" />}
+          icon={<FileText className="w-3.5 h-3.5 text-warn" />}
           label="MODIFIED"
           count={detail.unstaged.length}
           files={detail.unstaged}
-          colorClass="text-yellow-400 border-yellow-500/30 bg-yellow-900/10"
+          colorClass="text-warn border-warn/30 bg-warn/10"
         />
       )}
       {detail.untracked.length > 0 && (
         <FileGroup
-          icon={<FileQuestion className="w-3 h-3 text-gray-400" />}
+          icon={<FileQuestion className="w-3.5 h-3.5 text-text-dim" />}
           label="UNTRACKED"
           count={detail.untracked.length}
           files={detail.untracked}
-          colorClass="text-gray-400 border-gray-500/30 bg-gray-900/10"
+          colorClass="text-text-dim border-line-strong/30 bg-hover/10"
         />
       )}
     </div>
@@ -896,43 +874,13 @@ function FileGroup({
           {label} ({count})
         </span>
       </div>
-      <div className="text-xs text-gray-400 font-mono space-y-0.5 max-h-16 overflow-y-auto">
+      <div className="text-xs text-text-dim font-mono space-y-0.5 max-h-16 overflow-y-auto">
         {files.slice(0, 8).map((f, i) => (
           <div key={i} className="truncate">
             {f}
           </div>
         ))}
-        {files.length > 8 && <div className="text-gray-600">+ {files.length - 8} more</div>}
-      </div>
-    </div>
-  );
-}
-
-function Modal({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-bg border border-accent rounded-lg p-4 max-w-md w-full shadow-lg shadow-accent/20"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-accent">{title}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        {children}
+        {files.length > 8 && <div className="text-text-muted">+ {files.length - 8} more</div>}
       </div>
     </div>
   );

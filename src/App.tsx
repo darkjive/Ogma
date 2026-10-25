@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import GridLayout from 'react-grid-layout/legacy';
 import { CpuWidget } from './components/metrics/CpuWidget';
 import { MemoryWidget } from './components/metrics/MemoryWidget';
@@ -13,6 +13,7 @@ import { NetworkOutageMap } from './components/NetworkOutageMap';
 import { WebScraper } from './components/WebScraper';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { SoundManager } from './components/SoundManager';
+import { ThemeToggle } from './components/ThemeToggle';
 import { GitStatus } from './components/GitStatus';
 import { DockerWidget } from './components/DockerWidget';
 import { KanbanBoard } from './components/KanbanBoard';
@@ -272,6 +273,16 @@ async function checkWidgetHealth(widgetId: string): Promise<WidgetHealth> {
 }
 
 function App() {
+  // Designsystem UI-sound toggle (loaded as /ds/sounds.js in index.html) is mounted into the header
+  const dsSoundRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const host = dsSoundRef.current;
+    (window as unknown as { dsSound?: { mountToggle(p: HTMLElement): void } }).dsSound?.mountToggle(
+      host!
+    );
+    return () => host?.replaceChildren();
+  }, []);
+
   const [layout, setLayout] = useState<LayoutItem[]>(() => {
     try {
       const saved = localStorage.getItem('dashboard-layout');
@@ -447,114 +458,105 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <header
-        className="border-b border-line backdrop-blur-sm sticky top-0 z-50"
-        style={{ backgroundColor: 'var(--color-bg)' }}
-      >
-        <div className="px-3 py-3 md:px-6 md:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="ds-brand">
-              <img src="/favicon.svg" alt="" />
-              <h1>Ogma</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <SoundManager />
-              <div className="w-px h-6 bg-line" />
+      <header className="ds-header">
+        <div className="ds-brand">
+          <img src="/favicon.svg" alt="" />
+          <h1>Ogma</h1>
+        </div>
+        <div className="ds-header-actions">
+          <span ref={dsSoundRef} className="contents" />
+          <SoundManager />
+          <div className="w-px h-6 bg-line" />
+          <button
+            onClick={() => setShowWidgetControls(!showWidgetControls)}
+            className="ds-btn"
+            title="Toggle Widgets"
+          >
+            {showWidgetControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span className="hidden sm:inline">Widgets</span>
+          </button>
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`ds-btn ${showSettings ? 'active' : ''}`}
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+            <span className="hidden sm:inline">Settings</span>
+          </button>
+          {/* Layout actions only where the layout can be edited (not in the fixed phone/tablet views) */}
+          {isDesktop && (
+            <>
               <button
-                onClick={() => setShowWidgetControls(!showWidgetControls)}
-                className="ds-btn"
-                title="Toggle Widgets"
+                onClick={manualSave}
+                className={`ds-btn ${showSaved ? 'text-good' : ''}`}
+                title="Save Layout"
               >
-                {showWidgetControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span className="hidden sm:inline">Widgets</span>
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">{showSaved ? 'Saved!' : 'Save'}</span>
               </button>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`ds-btn ${showSettings ? 'active' : ''}`}
-                title="Settings"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">Settings</span>
+              <button onClick={resetLayout} className="ds-btn" title="Reset Layout to Default">
+                <RotateCcw className="w-4 h-4" />
+                <span className="hidden sm:inline">Reset</span>
               </button>
-              {/* Layout actions only where the layout can be edited (not in the fixed phone/tablet views) */}
-              {isDesktop && (
-                <>
-                  <button
-                    onClick={manualSave}
-                    className={`ds-btn ${showSaved ? 'text-good' : ''}`}
-                    title="Save Layout"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span className="hidden sm:inline">{showSaved ? 'Saved!' : 'Save'}</span>
-                  </button>
-                  <button onClick={resetLayout} className="ds-btn" title="Reset Layout to Default">
-                    <RotateCcw className="w-4 h-4" />
-                    <span className="hidden sm:inline">Reset</span>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+            </>
+          )}
+          <ThemeToggle />
+        </div>
+      </header>
 
-          {showWidgetControls && (
-            <div className="mt-4 pt-4 border-t border-line space-y-4">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                  <h3 className="text-sm font-bold text-accent">WIDGET VISIBILITY</h3>
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span>Running</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500 widget-pulse" />
-                      <span>Warning</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span>Disabled</span>
-                    </div>
-                  </div>
+      {showWidgetControls && (
+        <div className="px-3 py-4 md:px-6 border-b border-line bg-elevated space-y-4">
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h3 className="text-sm font-bold text-accent">WIDGET VISIBILITY</h3>
+              <div className="flex items-center gap-4 text-xs text-text-dim">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-good" />
+                  <span>Running</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                  {Object.entries(widgetConfig).map(([id, config]) => {
-                    const health = widgetHealth[id] || { status: 'ready' };
-                    const isEnabled = enabledWidgets[id];
-                    const hasWarning = isEnabled && health.status === 'warning';
-
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => toggleWidget(id)}
-                        title={health.message || (isEnabled ? 'Enabled' : 'Disabled')}
-                        className={`p-2 rounded text-xs font-mono transition-all flex items-center gap-2 relative ${
-                          !isEnabled
-                            ? 'bg-red-900/30 border border-red-500/50 text-red-300'
-                            : hasWarning
-                              ? 'bg-yellow-900/30 border border-yellow-500/50 text-yellow-300'
-                              : 'bg-green-900/30 border border-green-500/50 text-green-300'
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            !isEnabled
-                              ? 'bg-red-500'
-                              : hasWarning
-                                ? 'bg-yellow-500 widget-pulse'
-                                : 'bg-green-500'
-                          }`}
-                        />
-                        <config.icon size={12} className="shrink-0" />
-                        <span className="truncate">{config.name}</span>
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-warn widget-pulse" />
+                  <span>Warning</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-bad" />
+                  <span>Disabled</span>
                 </div>
               </div>
             </div>
-          )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {Object.entries(widgetConfig).map(([id, config]) => {
+                const health = widgetHealth[id] || { status: 'ready' };
+                const isEnabled = enabledWidgets[id];
+                const hasWarning = isEnabled && health.status === 'warning';
+
+                return (
+                  <button
+                    key={id}
+                    onClick={() => toggleWidget(id)}
+                    title={health.message || (isEnabled ? 'Enabled' : 'Disabled')}
+                    className={`p-2 rounded text-xs font-mono transition-all flex items-center gap-2 relative ${
+                      !isEnabled
+                        ? 'bg-bad/15 border border-bad/50 text-bad'
+                        : hasWarning
+                          ? 'bg-warn/15 border border-warn/50 text-warn'
+                          : 'bg-good/15 border border-good/50 text-good'
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        !isEnabled ? 'bg-bad' : hasWarning ? 'bg-warn widget-pulse' : 'bg-good'
+                      }`}
+                    />
+                    <config.icon size={14} className="shrink-0" />
+                    <span className="truncate">{config.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </header>
+      )}
 
       <SettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <Toaster />
@@ -589,11 +591,11 @@ function App() {
                 style={{ pointerEvents: 'auto' }}
               >
                 <div className="drag-handle group cursor-move shrink-0 p-2 border-b border-line hover:bg-accent/10 select-none">
-                  <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
-                    <config.icon size={12} />
+                  <div className="text-xs font-bold text-text-dim flex items-center gap-1.5">
+                    <config.icon size={14} />
                     {config.name}
                     <Move
-                      size={12}
+                      size={14}
                       className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
                     />
                   </div>
@@ -614,9 +616,11 @@ function App() {
         </GridLayout>
 
         <footer className="mt-12 py-6 border-t border-line text-center">
-          <p className="text-sm text-gray-500">Ogma // Powered by React 19 + Vite 7 + Tailwind 4</p>
-          <p className="text-xs text-gray-600 mt-2">Widgets per Drag &amp; Drop anordnen</p>
-          <p className="text-xs text-gray-700 mt-2">
+          <p className="text-sm text-text-muted">
+            Ogma // Powered by React 19 + Vite 7 + Tailwind 4
+          </p>
+          <p className="text-xs text-text-muted mt-2">Widgets per Drag &amp; Drop anordnen</p>
+          <p className="text-xs text-text-muted mt-2">
             Crafted by <span style={{ color: 'var(--color-accent)' }}>𐌀𐌋𐌀𐌉𐌍</span>
           </p>
         </footer>

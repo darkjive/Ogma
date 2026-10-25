@@ -1,13 +1,21 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#0b0d12" />
+    <meta name="theme-color" content="#0d1017" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ogma</title>
+    <script>
+      // Theme before first paint (system | light | dark, same key as the vault)
+      try {
+        var t = localStorage.getItem('vault-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <script src="/ds/sounds.js"></script>
   </head>
   <body>
     <div id="root"></div>

@@ -46,13 +46,13 @@ export function ServiceStatus() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'operational':
-        return 'text-green-500';
+        return 'text-good';
       case 'degraded':
-        return 'text-yellow-500';
+        return 'text-warn';
       case 'outage':
-        return 'text-red-500';
+        return 'text-bad';
       default:
-        return 'text-gray-500';
+        return 'text-text-muted';
     }
   };
 
@@ -83,15 +83,11 @@ export function ServiceStatus() {
     <div className="h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Wifi className="w-5 h-5 text-accent" />
-          <h3 className="text-lg font-bold">SERVICE STATUS</h3>
+          <Wifi className="w-4 h-4 text-accent" />
+          <h3 className="text-base font-bold">SERVICE STATUS</h3>
         </div>
-        <button
-          onClick={fetchStatus}
-          className="ds-btn ghost icon"
-          title="Refresh"
-        >
-          <RefreshCw className="w-4 h-4 text-gray-400 hover:text-accent" />
+        <button onClick={fetchStatus} className="ds-btn ghost icon" title="Refresh">
+          <RefreshCw className="w-4 h-4 text-text-dim hover:text-accent" />
         </button>
       </div>
 
@@ -112,14 +108,16 @@ export function ServiceStatus() {
                   <span className="font-mono text-sm">{service.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Circle className={`w-3 h-3 fill-current ${getStatusColor(service.status)}`} />
+                  <Circle
+                    className={`w-3.5 h-3.5 fill-current ${getStatusColor(service.status)}`}
+                  />
                   <span className={`text-xs font-bold ${getStatusColor(service.status)}`}>
                     {getStatusLabel(service.status)}
                   </span>
                 </div>
               </div>
               {service.description && service.status !== 'operational' && (
-                <div className="text-xs text-gray-400 mt-1 ml-7">{service.description}</div>
+                <div className="text-xs text-text-dim mt-1 ml-7">{service.description}</div>
               )}
             </a>
           );
@@ -127,7 +125,7 @@ export function ServiceStatus() {
       </div>
 
       {lastUpdated && (
-        <div className="mt-4 text-xs text-gray-500 text-right">
+        <div className="mt-4 text-xs text-text-muted text-right">
           Updated {lastUpdated.toLocaleTimeString()}
         </div>
       )}

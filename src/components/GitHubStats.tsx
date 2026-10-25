@@ -88,9 +88,9 @@ export function GitHubStats({ username = '' }: { username?: string }) {
   if (!username) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center gap-2">
-        <Github className="w-10 h-10 text-gray-600" />
-        <div className="text-sm text-gray-400">No GitHub username configured</div>
-        <div className="text-xs text-gray-600">Set one under Settings → General</div>
+        <Github className="w-10 h-10 text-text-muted" />
+        <div className="text-sm text-text-dim">Kein GitHub-Benutzername konfiguriert</div>
+        <div className="text-xs text-text-muted">Einstellbar unter Einstellungen → General</div>
       </div>
     );
   }
@@ -108,7 +108,7 @@ export function GitHubStats({ username = '' }: { username?: string }) {
   if (error || !user) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-red-500">GitHub data unavailable: {error}</div>
+        <div className="text-bad">GitHub data unavailable: {error}</div>
       </div>
     );
   }
@@ -117,7 +117,7 @@ export function GitHubStats({ username = '' }: { username?: string }) {
     <div className="h-full overflow-y-auto">
       <div className="flex items-center gap-3 mb-6">
         <Github className="w-6 h-6 text-accent" />
-        <h3 className="text-xl font-bold">GITHUB STATS</h3>
+        <h3 className="text-base font-bold">GITHUB STATS</h3>
       </div>
 
       {/* User Profile */}
@@ -130,8 +130,8 @@ export function GitHubStats({ username = '' }: { username?: string }) {
         />
         <div className="flex-1">
           <div className="text-lg font-bold text-accent">{user.name || user.login}</div>
-          <div className="text-sm text-gray-400">@{user.login}</div>
-          {user.bio && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{user.bio}</div>}
+          <div className="text-sm text-text-dim">@{user.login}</div>
+          {user.bio && <div className="text-xs text-text-muted mt-1 line-clamp-2">{user.bio}</div>}
         </div>
       </div>
 
@@ -139,21 +139,21 @@ export function GitHubStats({ username = '' }: { username?: string }) {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center p-3 bg-bg rounded border border-line">
           <div className="text-2xl font-bold text-accent">{user.public_repos}</div>
-          <div className="text-xs text-gray-400 mt-1">Repositories</div>
+          <div className="text-xs text-text-dim mt-1">Repositories</div>
         </div>
         <div className="text-center p-3 bg-bg rounded border border-line">
           <div className="text-2xl font-bold text-accent-bright">{user.followers}</div>
-          <div className="text-xs text-gray-400 mt-1">Followers</div>
+          <div className="text-xs text-text-dim mt-1">Followers</div>
         </div>
         <div className="text-center p-3 bg-bg rounded border border-line">
           <div className="text-2xl font-bold text-accent">{user.following}</div>
-          <div className="text-xs text-gray-400 mt-1">Following</div>
+          <div className="text-xs text-text-dim mt-1">Following</div>
         </div>
       </div>
 
       {/* Top Repositories */}
       <div>
-        <h4 className="text-sm font-bold text-gray-400 mb-3">TOP REPOSITORIES</h4>
+        <h4 className="text-sm font-bold text-text-dim mb-3">TOP REPOSITORIES</h4>
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {repos.map((repo, i) => (
             <div
@@ -163,30 +163,30 @@ export function GitHubStats({ username = '' }: { username?: string }) {
               <div className="flex items-start justify-between mb-2">
                 <div className="font-mono text-sm text-accent font-bold">{repo.name}</div>
                 {repo.language && (
-                  <span className="text-xs px-2 py-1 bg-elevated rounded text-gray-400">
+                  <span className="text-xs px-2 py-1 bg-elevated rounded text-text-dim">
                     {repo.language}
                   </span>
                 )}
               </div>
               {repo.description && (
-                <div className="text-xs text-gray-500 mb-2 line-clamp-2">{repo.description}</div>
+                <div className="text-xs text-text-muted mb-2 line-clamp-2">{repo.description}</div>
               )}
-              <div className="flex items-center gap-4 text-xs text-gray-400">
+              <div className="flex items-center gap-4 text-xs text-text-dim">
                 <div className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-accent-bright" />
+                  <Star className="w-3.5 h-3.5 text-accent-bright" />
                   <span>{repo.stargazers_count}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <GitFork className="w-3 h-3 text-accent" />
+                  <GitFork className="w-3.5 h-3.5 text-accent" />
                   <span>{repo.forks_count}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Eye className="w-3 h-3 text-gray-500" />
+                  <Eye className="w-3.5 h-3.5 text-text-muted" />
                   <span>{repo.watchers_count}</span>
                 </div>
                 {repo.open_issues_count > 0 && (
                   <div className="flex items-center gap-1">
-                    <GitPullRequest className="w-3 h-3 text-green-500" />
+                    <GitPullRequest className="w-3.5 h-3.5 text-good" />
                     <span>{repo.open_issues_count}</span>
                   </div>
                 )}

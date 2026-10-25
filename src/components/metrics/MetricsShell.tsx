@@ -20,10 +20,10 @@ export function MetricsShell({ title, icon, children }: MetricsShellProps) {
         <div
           className={`w-2 h-2 rounded-full ml-auto ${
             status === 'connected'
-              ? 'bg-green-500 animate-pulse'
+              ? 'bg-good animate-pulse'
               : status === 'connecting'
-                ? 'bg-yellow-500 animate-pulse'
-                : 'bg-red-500'
+                ? 'bg-warn animate-pulse'
+                : 'bg-bad'
           }`}
           title={
             status === 'connected'
@@ -34,7 +34,7 @@ export function MetricsShell({ title, icon, children }: MetricsShellProps) {
           }
         />
         <span
-          className="text-xs font-mono uppercase tracking-wider text-gray-400"
+          className="text-xs font-mono uppercase tracking-wider text-text-dim"
           aria-live="polite"
         >
           {status === 'connected' ? 'LIVE' : status === 'connecting' ? 'CONNECTING' : 'OFFLINE'}
@@ -48,15 +48,15 @@ export function MetricsShell({ title, icon, children }: MetricsShellProps) {
             <span className="blink-cursor" />
           </div>
         ) : error ? (
-          <div className="text-red-500 text-sm">
+          <div className="text-bad text-sm">
             <AlertTriangle size={14} className="inline mr-1" />
             {error}
             {status !== 'connected' && (
-              <div className="text-xs text-gray-500 mt-1">Attempting to reconnect…</div>
+              <div className="text-xs text-text-muted mt-1">Attempting to reconnect…</div>
             )}
           </div>
         ) : !metrics ? (
-          <div className="text-gray-400 text-sm">Waiting for data...</div>
+          <div className="text-text-dim text-sm">Waiting for data...</div>
         ) : (
           children(metrics)
         )}

@@ -4,41 +4,35 @@ import { formatBytes } from '../../lib/format';
 
 export function StorageWidget() {
   return (
-    <MetricsShell title="STORAGE" icon={<HardDrive className="text-accent w-5 h-5" />}>
+    <MetricsShell title="STORAGE" icon={<HardDrive className="text-accent w-4 h-4" />}>
       {metrics =>
         metrics.disk.length > 0 ? (
           <div className="grid gap-3 @md:grid-cols-2">
             {metrics.disk.slice(0, 3).map((disk, i) => (
               <div key={i} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
                 <div className="flex justify-between mb-1">
-                  <span className="text-gray-400 font-mono text-xs">{disk.mount}</span>
+                  <span className="text-text-dim font-mono text-xs">{disk.mount}</span>
                   <span className="text-accent font-bold text-sm">
                     {disk.percentage.toFixed(1)}%
                   </span>
                 </div>
                 <div className="flex justify-between text-xs mb-2">
-                  <span className="text-gray-500">
+                  <span className="text-text-muted">
                     {formatBytes(disk.used)} / {formatBytes(disk.size)}
                   </span>
-                  <span className="text-gray-500">{formatBytes(disk.size - disk.used)} free</span>
+                  <span className="text-text-muted">{formatBytes(disk.size - disk.used)} free</span>
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      disk.percentage > 90
-                        ? 'bg-red-500'
-                        : disk.percentage > 70
-                          ? 'bg-accent-bright'
-                          : 'bg-accent'
-                    }`}
-                    style={{ width: `${disk.percentage}%` }}
-                  />
+                <div
+                  className={`ds-progress${disk.percentage > 90 ? ' over' : ''}`}
+                  style={{ '--v': Number(disk.percentage) / 100 } as React.CSSProperties}
+                >
+                  <span />
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-gray-400 text-sm">No storage devices detected</div>
+          <div className="text-text-dim text-sm">Keine Laufwerke erkannt</div>
         )
       }
     </MetricsShell>

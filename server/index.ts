@@ -784,6 +784,11 @@ const distDir = resolve(process.cwd(), 'dist');
 if (existsSync(distDir)) {
   app.use(express.static(distDir));
 }
+// Designsystem assets that cannot be bundled (sounds.js loads its sound files and the icon sprite at runtime)
+const dsDir = resolve(process.cwd(), '../Designsystem');
+if (existsSync(dsDir)) {
+  app.use('/ds', express.static(dsDir));
+}
 
 // Refuse to start rather than merely warn: a non-loopback bind without a
 // token would serve every destructive endpoint (git push/commit, scraping)

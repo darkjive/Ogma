@@ -34,11 +34,11 @@ export function NetworkOutageMap() {
   }, []);
 
   const getLatencyColor = (reachable: boolean, latencyMs: number | null) => {
-    if (!reachable) return 'text-red-500';
-    if (latencyMs === null) return 'text-gray-500';
-    if (latencyMs < 100) return 'text-green-500';
-    if (latencyMs < 400) return 'text-yellow-500';
-    return 'text-red-500';
+    if (!reachable) return 'text-bad';
+    if (latencyMs === null) return 'text-text-muted';
+    if (latencyMs < 100) return 'text-good';
+    if (latencyMs < 400) return 'text-warn';
+    return 'text-bad';
   };
 
   const getLatencyLabel = (reachable: boolean, latencyMs: number | null) => {
@@ -64,15 +64,11 @@ export function NetworkOutageMap() {
     <div className="h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-accent-bright" />
-          <h3 className="text-lg font-bold text-accent-bright">CONNECTIVITY</h3>
+          <Activity className="w-4 h-4 text-accent-bright" />
+          <h3 className="text-base font-bold">CONNECTIVITY</h3>
         </div>
-        <button
-          onClick={fetchConnectivity}
-          className="ds-btn ghost icon"
-          title="Refresh"
-        >
-          <RefreshCw className="w-4 h-4 text-gray-400 hover:text-accent" />
+        <button onClick={fetchConnectivity} className="ds-btn ghost icon" title="Refresh">
+          <RefreshCw className="w-4 h-4 text-text-dim hover:text-accent" />
         </button>
       </div>
 
@@ -80,10 +76,10 @@ export function NetworkOutageMap() {
       <div
         className={`mb-4 p-3 rounded border flex items-center gap-2 ${
           allReachable
-            ? 'bg-green-900/20 border-green-500/40 text-green-400'
+            ? 'bg-good/15 border-good/40 text-good'
             : someUnreachable
-              ? 'bg-red-900/20 border-red-500/40 text-red-400'
-              : 'bg-gray-900/20 border-gray-500/40 text-gray-400'
+              ? 'bg-bad/15 border-bad/40 text-bad'
+              : 'bg-hover/20 border-line-strong/40 text-text-dim'
         }`}
       >
         {allReachable ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
@@ -104,9 +100,7 @@ export function NetworkOutageMap() {
             className="flex items-center justify-between p-3 bg-bg rounded border border-line"
           >
             <div className="flex items-center gap-2">
-              <div
-                className={`w-2 h-2 rounded-full ${check.reachable ? 'bg-green-500' : 'bg-red-500'}`}
-              />
+              <div className={`w-2 h-2 rounded-full ${check.reachable ? 'bg-good' : 'bg-bad'}`} />
               <span className="font-mono text-sm">{check.name}</span>
             </div>
             <span
@@ -119,7 +113,7 @@ export function NetworkOutageMap() {
       </div>
 
       {lastUpdated && (
-        <div className="mt-4 text-xs text-gray-500 text-right">
+        <div className="mt-4 text-xs text-text-muted text-right">
           Updated {lastUpdated.toLocaleTimeString()}
         </div>
       )}
