@@ -460,6 +460,11 @@ app.get('/health', (_req, res) => {
 app.get('/api/service-status', generalLimiter, async (_req, res) => {
   const services = [
     {
+      name: 'Claude',
+      apiUrl: 'https://status.claude.com/api/v2/status.json',
+      statusUrl: 'https://status.claude.com/',
+    },
+    {
       name: 'Cloudflare',
       apiUrl: 'https://www.cloudflarestatus.com/api/v2/status.json',
       statusUrl: 'https://www.cloudflarestatus.com/',
@@ -475,14 +480,19 @@ app.get('/api/service-status', generalLimiter, async (_req, res) => {
       statusUrl: 'https://status.openai.com/',
     },
     {
-      name: 'Anthropic',
-      apiUrl: 'https://status.anthropic.com/api/v2/status.json',
-      statusUrl: 'https://status.anthropic.com/',
-    },
-    {
       name: 'Vercel',
       apiUrl: 'https://www.vercel-status.com/api/v2/status.json',
       statusUrl: 'https://www.vercel-status.com/',
+    },
+    {
+      name: 'Tailscale',
+      apiUrl: 'https://status.tailscale.com/api/v2/status.json',
+      statusUrl: 'https://status.tailscale.com/',
+    },
+    {
+      name: 'npm',
+      apiUrl: 'https://status.npmjs.org/api/v2/status.json',
+      statusUrl: 'https://status.npmjs.org/',
     },
   ];
 
@@ -530,6 +540,7 @@ app.get('/api/connectivity', generalLimiter, async (_req, res) => {
     { name: 'Cloudflare DNS', url: 'https://1.1.1.1' },
     { name: 'Google DNS', url: 'https://8.8.8.8' },
     { name: 'GitHub', url: 'https://github.com' },
+    { name: 'Claude API', url: 'https://api.anthropic.com' },
     { name: 'Cloudflare', url: 'https://cloudflare.com' },
     { name: 'Google', url: 'https://google.com' },
   ];

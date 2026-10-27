@@ -245,7 +245,7 @@ NixOS doesn't ship standard glibc paths Playwright expects. Use [`playwright-nix
 
 - **Developer control center** – Watch CPU, memory, VRAM and temperature while builds, dev servers and local models run.
 - **Repo overview** – See dirty, ahead and behind repos across your project folders and pull, push or commit in bulk.
-- **Local stack at a glance** – Check Docker containers, connectivity and upstream service status (GitHub, Vercel, Anthropic, …) without leaving the dashboard.
+- **Local stack at a glance** – Check Docker containers, connectivity and upstream service status (Claude, GitHub, Vercel, Tailscale, …) without leaving the dashboard.
 
 ## 🔧 Development
 

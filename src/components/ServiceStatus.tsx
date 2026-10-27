@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cloud, Server, Globe, Wifi, Circle, RefreshCw } from 'lucide-react';
+import { Cloud, Server, Globe, Wifi, Circle, RefreshCw, Network, Package } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
@@ -11,11 +11,13 @@ interface ServiceStatus {
 }
 
 const ICONS: Record<string, LucideIcon> = {
+  Claude: Server,
   Cloudflare: Cloud,
   GitHub: Server,
   OpenAI: Server,
-  Anthropic: Server,
   Vercel: Globe,
+  Tailscale: Network,
+  npm: Package,
 };
 
 export function ServiceStatus() {
