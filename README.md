@@ -45,7 +45,7 @@ Kanban Board: columns can be hidden, ideas are captured raw (badge "Idee" until 
 
 ### Design
 
-- **Shared design system**: colors, type scale, spacing and `ds-` components come from a shared Designsystem used by all my internal apps (a private sibling checkout at `../Designsystem`)
+- **Shared design system**: colors, type scale, spacing and `ds-` components come from a shared design system (Harmonia) used by all my internal apps (a private sibling checkout at `../Harmonia`)
 - **Drag & resize grid** on desktop, saved per browser
 - **Single-column phone view** below 768px, in desktop reading order
 - **Widget visibility panel** with a live health status per widget
@@ -161,8 +161,8 @@ Everything is persisted in `localStorage`.
 
 #### Colors and styles
 
-Colors, font sizes, spacing and radii are tokens from the shared Designsystem
-(`src/index.css` imports `../Designsystem/*.css`). Change them there, not in this app;
+Colors, font sizes, spacing and radii are tokens from the shared design system (Harmonia)
+(`src/index.css` imports `../Harmonia/*.css`). Change them there, not in this app;
 app-specific Tailwind settings and keyframes live in the `@theme {}` block of `src/index.css`.
 
 ## 📁 Project Structure
@@ -190,7 +190,7 @@ Ogma/
 │   │   ├── api.ts                # apiFetch wrapper (attaches optional dashboard token)
 │   │   └── toast.ts              # toast() notifications
 │   ├── App.tsx                   # Main dashboard grid layout
-│   ├── index.css                 # Tailwind + Designsystem imports
+│   ├── index.css                 # Tailwind + Harmonia imports
 │   └── main.tsx                  # React entry point
 ├── electron/
 │   └── main.cjs                  # Electron shell (spawns server + vite)

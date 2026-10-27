@@ -800,8 +800,8 @@ const distDir = resolve(process.cwd(), 'dist');
 if (existsSync(distDir)) {
   app.use(express.static(distDir));
 }
-// Designsystem assets that cannot be bundled (sounds.js loads its sound files and the icon sprite at runtime)
-const dsDir = resolve(process.cwd(), '../Designsystem');
+// Harmonia assets that cannot be bundled (sounds.js loads its sound files and the icon sprite at runtime)
+const dsDir = resolve(process.cwd(), '../Harmonia');
 if (existsSync(dsDir)) {
   app.use('/ds', express.static(dsDir));
 }

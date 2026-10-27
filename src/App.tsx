@@ -273,7 +273,7 @@ async function checkWidgetHealth(widgetId: string): Promise<WidgetHealth> {
 }
 
 function App() {
-  // Designsystem UI-sound toggle (loaded as /ds/sounds.js in index.html) is mounted into the header
+  // Harmonia UI-sound toggle (loaded as /ds/sounds.js in index.html) is mounted into the header
   const dsSoundRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const host = dsSoundRef.current;

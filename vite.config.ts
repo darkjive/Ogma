@@ -8,7 +8,7 @@ const backendPort = process.env.PORT || '3010';
 export default defineConfig({
   plugins: [react()],
   server: {
-    fs: { allow: ['.', '../Designsystem'] },
+    fs: { allow: ['.', '../Harmonia'] },
     // Eigener Port: 5173 kollidiert mit anderen Vite-Projekten (z. B. Zeitgeber-PWA/Service Worker)
     port: 5180,
     strictPort: true,
@@ -20,7 +20,7 @@ export default defineConfig({
         target: `http://localhost:${backendPort}`,
         changeOrigin: true,
       },
-      // Designsystem runtime assets (sounds.js, sounds, icon sprite) come from the backend
+      // Harmonia runtime assets (sounds.js, sounds, icon sprite) come from the backend
       '/ds': {
         target: `http://localhost:${backendPort}`,
         changeOrigin: true,

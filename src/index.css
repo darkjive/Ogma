@@ -1,9 +1,9 @@
 @import 'tailwindcss';
-@import '../../Designsystem/tokens.css';
-@import '../../Designsystem/base.css' layer(base);
-@import '../../Designsystem/components.css' layer(components);
-@import '../../Designsystem/tailwind.css';
-@import '../../Designsystem/tailwind-scale.css';
+@import '../../Harmonia/tokens.css';
+@import '../../Harmonia/base.css' layer(base);
+@import '../../Harmonia/components.css' layer(components);
+@import '../../Harmonia/tailwind.css';
+@import '../../Harmonia/tailwind-scale.css';
 
 @theme {
   --animate-blink: blink 1s step-end infinite;
