@@ -1,13 +1,12 @@
-import { HardDrive } from 'lucide-react';
 import { MetricsShell } from './MetricsShell';
 import { formatBytes } from '../../lib/format';
 
 export function StorageWidget() {
   return (
-    <MetricsShell title="STORAGE" icon={<HardDrive className="text-accent w-4 h-4" />}>
+    <MetricsShell>
       {metrics =>
         metrics.disk.length > 0 ? (
-          <div className="grid gap-3 @md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
             {metrics.disk.slice(0, 3).map((disk, i) => (
               <div key={i} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
                 <div className="flex justify-between mb-1">

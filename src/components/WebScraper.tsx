@@ -75,9 +75,7 @@ export function WebScraper() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
-        <Globe className="w-4 h-4 text-accent" />
-        <h3 className="text-base font-bold">WEB SCRAPER v2</h3>
+      <div className="flex mb-2">
         <span className="text-xs text-text-muted ml-auto">Playwright + Markdown</span>
       </div>
 

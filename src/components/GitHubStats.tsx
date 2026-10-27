@@ -115,11 +115,6 @@ export function GitHubStats({ username = '' }: { username?: string }) {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Github className="w-6 h-6 text-accent" />
-        <h3 className="text-base font-bold">GITHUB STATS</h3>
-      </div>
-
       {/* User Profile */}
       <div className="flex items-center gap-4 mb-6 pb-6 border-b border-line">
         <img

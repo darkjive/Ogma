@@ -46,7 +46,7 @@ Kanban Board: columns can be hidden, ideas are captured raw (badge "Idee" until 
 ### Design
 
 - **Shared design system**: colors, type scale, spacing and `ds-` components come from a shared design system (Harmonia) used by all my internal apps (a private sibling checkout at `../Harmonia`)
-- **Drag & resize grid** on desktop, saved per browser
+- **Drag & resize grid** on desktop, saved per browser; the 6-column view for half a screen (< 1280px) has its own editable layout
 - **Single-column phone view** below 768px, in desktop reading order
 - **Widget visibility panel** with a live health status per widget
 

@@ -103,6 +103,56 @@ const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1280;
 // Page padding: px-3 on phones, px-6 above; the grid width must match.
 const gridWidth = (viewport: number) => viewport - (viewport < MOBILE_BREAKPOINT ? 24 : 48);
+// The tablet view (e.g. the app on half a screen) has its own layout, so editing it never
+// touches the desktop one. Until it is edited, it is derived from the desktop layout.
+const TABLET_LAYOUT_KEY = 'dashboard-layout-tablet';
+
+function loadLayout(key: string): LayoutItem[] | null {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) ?? 'null');
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        item =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof item.i === 'string' &&
+          typeof item.x === 'number'
+      )
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Silent fallback to default
+  }
+  return null;
+}
+
+// 6 columns in desktop reading order.
+function deriveTabletLayout(layout: LayoutItem[]): LayoutItem[] {
+  const packed: LayoutItem[] = [];
+  let x = 0;
+  let y = 0;
+  let rowH = 0;
+  for (const item of [...layout].sort((a, b) => a.y - b.y || a.x - b.x)) {
+    const w = item.w >= 6 ? 6 : 3;
+    if (x + w > 6) {
+      y += rowH;
+      x = 0;
+      rowH = 0;
+    }
+    packed.push({
+      ...item,
+      x,
+      y,
+      w,
+      minW: Math.min(item.minW ?? 1, w),
+    });
+    x += w;
+    rowH = Math.max(rowH, item.h);
+  }
+  return packed;
+}
 
 const defaultEnabledWidgets = {
   kanban: true,
@@ -230,6 +280,7 @@ function invalidateStaleLayout() {
     const storedVersion = localStorage.getItem('dashboard-layout-version');
     if (storedVersion !== String(LAYOUT_VERSION)) {
       localStorage.removeItem('dashboard-layout');
+      localStorage.removeItem(TABLET_LAYOUT_KEY);
       localStorage.setItem('dashboard-layout-version', String(LAYOUT_VERSION));
     }
   } catch {
@@ -283,29 +334,13 @@ function App() {
     return () => host?.replaceChildren();
   }, []);
 
-  const [layout, setLayout] = useState<LayoutItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('dashboard-layout');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (
-          Array.isArray(parsed) &&
-          parsed.every(
-            item =>
-              typeof item === 'object' &&
-              item !== null &&
-              typeof item.i === 'string' &&
-              typeof item.x === 'number'
-          )
-        ) {
-          return parsed;
-        }
-      }
-    } catch {
-      // Silent fallback to default
-    }
-    return defaultLayout;
-  });
+  const [layout, setLayout] = useState<LayoutItem[]>(
+    () => loadLayout('dashboard-layout') ?? defaultLayout
+  );
+  // null = not edited yet, derived from the desktop layout
+  const [tabletSaved, setTabletSaved] = useState<LayoutItem[] | null>(() =>
+    loadLayout(TABLET_LAYOUT_KEY)
+  );
 
   const [enabledWidgets, setEnabledWidgets] = useState<Record<string, boolean>>(() => {
     try {
@@ -381,12 +416,13 @@ function App() {
       setLayout(newLayout);
       localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
     }
-  };
 
-  const manualSave = () => {
-    localStorage.setItem('dashboard-layout', JSON.stringify(layout));
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 2000);
+    if (!wasEnabled && tabletSaved && !tabletSaved.some(item => item.i === widgetId)) {
+      const maxY = tabletSaved.reduce((max, item) => Math.max(max, item.y + item.h), 0);
+      const next = [...tabletSaved, { i: widgetId, x: 0, y: maxY, w: 6, h: 4, minW: 3, minH: 2 }];
+      setTabletSaved(next);
+      localStorage.setItem(TABLET_LAYOUT_KEY, JSON.stringify(next));
+    }
   };
 
   const isMobile = containerWidth < MOBILE_BREAKPOINT - 24;
@@ -410,26 +446,18 @@ function App() {
     return stacked;
   }, [layout]);
 
-  // Tablets: 6 columns in desktop reading order, fixed in place. Derived on the fly and
-  // never saved, like the phone layout.
-  const tabletLayout = useMemo(() => {
-    const packed: LayoutItem[] = [];
-    let x = 0;
-    let y = 0;
-    let rowH = 0;
-    for (const item of [...layout].sort((a, b) => a.y - b.y || a.x - b.x)) {
-      const w = item.w >= 6 ? 6 : 3;
-      if (x + w > 6) {
-        y += rowH;
-        x = 0;
-        rowH = 0;
-      }
-      packed.push({ ...item, x, y, w, minW: Math.min(item.minW ?? 1, w) });
-      x += w;
-      rowH = Math.max(rowH, item.h);
-    }
-    return packed;
-  }, [layout]);
+  // Tablets: 6 columns, editable and saved on its own (see TABLET_LAYOUT_KEY).
+  const tabletLayout = useMemo(
+    () => tabletSaved ?? deriveTabletLayout(layout),
+    [tabletSaved, layout]
+  );
+
+  const manualSave = () => {
+    if (isTablet) localStorage.setItem(TABLET_LAYOUT_KEY, JSON.stringify(tabletLayout));
+    else localStorage.setItem('dashboard-layout', JSON.stringify(layout));
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 2000);
+  };
 
   // react-grid-layout only reports items of mounted (enabled) widgets; keep the
   // last position of disabled ones so re-enabling restores it.
@@ -440,7 +468,21 @@ function App() {
     localStorage.setItem('dashboard-layout', JSON.stringify(merged));
   };
 
+  // Saved on drag/resize stop only, so merely viewing the tablet view keeps following the
+  // desktop layout. Keeps the last position of disabled widgets like saveLayout.
+  const saveTabletLayout = (newLayout: ReadonlyArray<LayoutItem>) => {
+    const ids = new Set(newLayout.map(item => item.i));
+    const merged = [...newLayout, ...tabletLayout.filter(item => !ids.has(item.i))];
+    setTabletSaved(merged);
+    localStorage.setItem(TABLET_LAYOUT_KEY, JSON.stringify(merged));
+  };
+
   const resetLayout = () => {
+    if (isTablet) {
+      setTabletSaved(null);
+      localStorage.removeItem(TABLET_LAYOUT_KEY);
+      return;
+    }
     // Reset to default layout but only include enabled widgets
     const resetLayout = defaultLayout.filter(item => enabledWidgets[item.i]);
     setLayout(resetLayout);
@@ -483,8 +525,8 @@ function App() {
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
           </button>
-          {/* Layout actions only where the layout can be edited (not in the fixed phone/tablet views) */}
-          {isDesktop && (
+          {/* Layout actions only where the layout can be edited (not in the fixed phone view) */}
+          {!isMobile && (
             <>
               <button
                 onClick={manualSave}
@@ -570,10 +612,16 @@ function App() {
           width={containerWidth}
           onLayoutChange={isDesktop ? saveLayout : undefined}
           onDragStart={() => setIsDragging(true)}
-          onDragStop={() => setIsDragging(false)}
+          onDragStop={newLayout => {
+            setIsDragging(false);
+            if (isTablet) saveTabletLayout(newLayout);
+          }}
+          onResizeStop={newLayout => {
+            if (isTablet) saveTabletLayout(newLayout);
+          }}
           draggableHandle=".drag-handle"
-          isDraggable={isDesktop}
-          isResizable={isDesktop}
+          isDraggable={!isMobile}
+          isResizable={!isMobile}
           compactType="vertical"
           preventCollision={false}
         >

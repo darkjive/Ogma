@@ -1,14 +1,15 @@
-import { Activity } from 'lucide-react';
 import { MetricsShell } from './MetricsShell';
 import { formatBytes } from '../../lib/format';
 
 export function MemoryWidget() {
   return (
-    <MetricsShell title="MEMORY" icon={<Activity className="text-accent-bright w-4 h-4" />}>
+    <MetricsShell>
       {metrics => (
-        <div className="space-y-3">
+        <div className="h-full flex flex-col justify-between gap-3">
           <div className="space-y-3 @md:space-y-0 @md:grid @md:grid-cols-2 @md:items-center @md:gap-4">
-            <div className="metric-value text-accent-bright">{metrics.memory.percentage}%</div>
+            <div className="metric-value @xs:text-3xl text-accent-bright">
+              {metrics.memory.percentage}%
+            </div>
             <div className="text-sm space-y-1">
               <div className="flex justify-between">
                 <span className="text-text-dim">Used:</span>

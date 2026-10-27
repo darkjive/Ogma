@@ -76,9 +76,8 @@ export function WeatherWidget({ location: initialLocation = 'Munich' }: { locati
     <div className="h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-bold">WEATHER</h3>
           {editingLocation ? (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={tempLocation}
@@ -104,7 +103,7 @@ export function WeatherWidget({ location: initialLocation = 'Munich' }: { locati
           ) : (
             <button
               onClick={() => setEditingLocation(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-bg border border-accent/30 rounded text-xs text-accent mt-1 hover:border-accent hover:bg-accent/10 transition-all group"
+              className="flex items-center gap-2 px-3 py-1.5 bg-bg border border-accent/30 rounded text-xs text-accent hover:border-accent hover:bg-accent/10 transition-all group"
             >
               <MapPin className="w-3.5 h-3.5" />
               <span>

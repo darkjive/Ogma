@@ -4,44 +4,33 @@ import type { MetricsData } from '../../../shared/types';
 import { useMetrics } from '../../lib/metricsStore';
 
 interface MetricsShellProps {
-  title: string;
-  icon: ReactNode;
   children: (metrics: MetricsData) => ReactNode;
 }
 
-export function MetricsShell({ title, icon, children }: MetricsShellProps) {
+// The tile frame already shows the widget name; the shell only adds the live status as a
+// dot in the top-right padding and lets the content fill the whole tile.
+export function MetricsShell({ children }: MetricsShellProps) {
   const { metrics, loading, error, status } = useMetrics();
+  const label =
+    status === 'connected' ? 'LIVE' : status === 'connecting' ? 'CONNECTING' : 'OFFLINE';
 
   return (
-    <div className="space-y-3 h-full flex flex-col">
-      <div className="flex items-center gap-2">
-        {icon}
-        <h3 className="text-base font-bold">{title}</h3>
-        <div
-          className={`w-2 h-2 rounded-full ml-auto ${
-            status === 'connected'
-              ? 'bg-good animate-pulse'
-              : status === 'connecting'
-                ? 'bg-warn animate-pulse'
-                : 'bg-bad'
-          }`}
-          title={
-            status === 'connected'
-              ? 'LIVE'
-              : status === 'connecting'
-                ? 'CONNECTING'
-                : 'DISCONNECTED'
-          }
-        />
-        <span
-          className="text-xs font-mono uppercase tracking-wider text-text-dim"
-          aria-live="polite"
-        >
-          {status === 'connected' ? 'LIVE' : status === 'connecting' ? 'CONNECTING' : 'OFFLINE'}
-        </span>
-      </div>
+    <div className="relative h-full flex flex-col">
+      <div
+        className={`absolute -top-3 -right-3 w-2 h-2 rounded-full ${
+          status === 'connected'
+            ? 'bg-good animate-pulse'
+            : status === 'connecting'
+              ? 'bg-warn animate-pulse'
+              : 'bg-bad'
+        }`}
+        title={label}
+      />
+      <span className="sr-only" aria-live="polite">
+        {label}
+      </span>
 
-      <div className="flex-1 min-h-0 flex flex-col justify-center">
+      <div className="flex-1 min-h-0 flex flex-col">
         {loading ? (
           <div className="text-accent text-sm">
             CONNECTING

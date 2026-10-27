@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ConfirmDialog } from './Dialog';
-import { FileText, Download, Copy, Eye, Code, Trash2, Wand2 } from 'lucide-react';
+import { Download, Copy, Eye, Code, Trash2, Wand2 } from 'lucide-react';
 
 export function MarkdownEditor() {
   const [markdown, setMarkdown] = useState(() => {
@@ -163,11 +163,7 @@ export function MarkdownEditor() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-accent" />
-          <h3 className="text-base font-bold">MARKDOWN EDITOR</h3>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
         <div className="flex flex-wrap items-center gap-2">
           {/* Input Mode Toggle */}
           <div className="flex gap-1 bg-bg border border-line rounded p-1">

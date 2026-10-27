@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, RefreshCw, WifiOff, Wifi } from 'lucide-react';
+import { RefreshCw, WifiOff, Wifi } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
 interface ConnectivityCheck {
@@ -62,11 +62,7 @@ export function NetworkOutageMap() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-accent-bright" />
-          <h3 className="text-base font-bold">CONNECTIVITY</h3>
-        </div>
+      <div className="flex justify-end -mt-2 mb-1">
         <button onClick={fetchConnectivity} className="ds-btn ghost icon" title="Refresh">
           <RefreshCw className="w-4 h-4 text-text-dim hover:text-accent" />
         </button>

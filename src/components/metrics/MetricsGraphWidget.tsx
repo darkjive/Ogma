@@ -1,4 +1,3 @@
-import { LineChart as LineChartIcon } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -15,10 +14,7 @@ export function MetricsGraphWidget() {
   const { history } = useMetrics();
 
   return (
-    <MetricsShell
-      title="REAL-TIME PERFORMANCE"
-      icon={<LineChartIcon className="text-accent w-4 h-4" />}
-    >
+    <MetricsShell>
       {() => (
         <div className="space-y-2 h-full flex flex-col">
           <div className="flex-1 min-h-45">

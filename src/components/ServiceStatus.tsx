@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cloud, Server, Globe, Wifi, Circle, RefreshCw, Network, Package } from 'lucide-react';
+import { Cloud, Server, Globe, Circle, RefreshCw, Network, Package } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
@@ -83,11 +83,7 @@ export function ServiceStatus() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Wifi className="w-4 h-4 text-accent" />
-          <h3 className="text-base font-bold">SERVICE STATUS</h3>
-        </div>
+      <div className="flex justify-end -mt-2 mb-1">
         <button onClick={fetchStatus} className="ds-btn ghost icon" title="Refresh">
           <RefreshCw className="w-4 h-4 text-text-dim hover:text-accent" />
         </button>
