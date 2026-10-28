@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import GridLayout from 'react-grid-layout/legacy';
+import { MetricsStatusDot } from './components/metrics/MetricsShell';
 import { CoresWidget } from './components/metrics/CoresWidget';
 import { CpuWidget } from './components/metrics/CpuWidget';
 import { MemoryWidget } from './components/metrics/MemoryWidget';
@@ -643,6 +644,7 @@ function App() {
                       size={14}
                       className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
                     />
+                    {id.startsWith('metrics-') && <MetricsStatusDot />}
                   </div>
                 </div>
                 <div

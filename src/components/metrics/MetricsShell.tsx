@@ -7,27 +7,38 @@ interface MetricsShellProps {
   children: (metrics: MetricsData) => ReactNode;
 }
 
-// The tile frame already shows the widget name; the shell only adds the live status as a
-// dot in the top-right padding and lets the content fill the whole tile.
+const statusLabel = {
+  connected: 'LIVE',
+  connecting: 'CONNECTING',
+  disconnected: 'OFFLINE',
+} as const;
+
+// Live status dot, rendered by the tile header of every metrics widget.
+export function MetricsStatusDot() {
+  const { status } = useMetrics();
+  return (
+    <span
+      className={`w-2 h-2 rounded-full ${
+        status === 'connected'
+          ? 'bg-good animate-pulse'
+          : status === 'connecting'
+            ? 'bg-warn animate-pulse'
+            : 'bg-bad'
+      }`}
+      title={statusLabel[status]}
+    />
+  );
+}
+
+// The tile frame already shows the widget name and live status; the shell lets the content
+// fill the whole tile.
 export function MetricsShell({ children }: MetricsShellProps) {
   const { metrics, loading, error, status } = useMetrics();
-  const label =
-    status === 'connected' ? 'LIVE' : status === 'connecting' ? 'CONNECTING' : 'OFFLINE';
 
   return (
     <div className="relative h-full flex flex-col">
-      <div
-        className={`absolute -top-3 -right-3 w-2 h-2 rounded-full ${
-          status === 'connected'
-            ? 'bg-good animate-pulse'
-            : status === 'connecting'
-              ? 'bg-warn animate-pulse'
-              : 'bg-bad'
-        }`}
-        title={label}
-      />
       <span className="sr-only" aria-live="polite">
-        {label}
+        {statusLabel[status]}
       </span>
 
       <div className="flex-1 min-h-0 flex flex-col">
