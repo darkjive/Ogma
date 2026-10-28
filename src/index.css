@@ -42,6 +42,22 @@
   }
 }
 
+@keyframes kanban-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 0%, transparent);
+  }
+}
+
+@keyframes kanban-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
 /* Base Styles */
 body {
   background-color: var(--color-bg);
@@ -170,6 +186,21 @@ body {
 /* Ensure content area doesn't interfere with drag */
 .react-grid-item > div > .drag-handle {
   touch-action: none;
+}
+
+/* Kanban: card pulses while an agent works, dot blinks when it waits for an answer */
+.kanban-working {
+  border-color: var(--good);
+  animation: kanban-pulse 2s ease-in-out infinite;
+}
+.kanban-blink {
+  animation: kanban-blink 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kanban-working,
+  .kanban-blink {
+    animation: none;
+  }
 }
 
 /* Widget Status Pulse Animation */

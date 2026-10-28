@@ -137,7 +137,7 @@ export type KanbanStatus = 'todo' | 'doing' | 'review' | 'done';
 
 export interface KanbanActivity {
   number: string;
-  state: 'working' | 'idle';
+  state: 'working' | 'asking' | 'error' | 'idle';
   summary: string;
   /** Seconds since the session last reported. */
   age: number;

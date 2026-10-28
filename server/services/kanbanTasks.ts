@@ -247,6 +247,9 @@ export async function startPreview(file: string): Promise<string> {
   return target;
 }
 
+/** A `working` session silent for longer than this is treated as stuck (long builds stay below it). */
+const ACTIVITY_STUCK_S = 600;
+
 /**
  * Live state of Claude sessions, written per session by ~/.claude/hooks/kanban-activity.sh.
  * A session belongs to the task named in its `/kanban NNN` prompt; otherwise to the `doing`
@@ -270,12 +273,15 @@ export async function listActivity(): Promise<KanbanActivity[]> {
       );
       const number = a.task || (inProject.length === 1 ? inProject[0].number : '');
       if (!number) continue;
-      result.push({
-        number,
-        state: a.state === 'working' ? 'working' : 'idle',
-        summary: String(a.summary ?? ''),
-        age: Math.max(0, Math.round(now - Number(a.ts))),
-      });
+      const age = Math.max(0, Math.round(now - Number(a.ts)));
+      let state: KanbanActivity['state'] =
+        a.state === 'working' || a.state === 'asking' || a.state === 'error' ? a.state : 'idle';
+      let summary = String(a.summary ?? '');
+      if (state === 'working' && age > ACTIVITY_STUCK_S) {
+        state = 'error';
+        summary = `Keine Meldung seit ${Math.round(age / 60)} min`;
+      }
+      result.push({ number, state, summary, age });
     } catch {
       // half-written or foreign file: skip
     }

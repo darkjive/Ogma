@@ -14,7 +14,6 @@ const COLUMNS: { status: KanbanStatus; label: string; color: string }[] = [
 ];
 const POLL_MS = 3000;
 // A working session that stopped reporting (crash, closed terminal) is no longer shown as live.
-const ACTIVITY_STALE_S = 120;
 const CATEGORY_COLORS = 10;
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const formatSize = (b: number) =>
@@ -259,12 +258,38 @@ const PlanProgress = ({ body, color }: { body: string; color: string }) => {
   );
 };
 
-const LiveActivity = ({ activity }: { activity?: KanbanActivity }) => {
-  if (!activity || activity.state !== 'working' || activity.age > ACTIVITY_STALE_S) return null;
+const ACTIVITY_LABEL: Record<Exclude<KanbanActivity['state'], 'idle'>, string> = {
+  working: 'Arbeitet',
+  asking: 'Rückfrage nötig',
+  error: 'Problem',
+};
+
+const ACTIVITY_COLOR: Record<Exclude<KanbanActivity['state'], 'idle'>, string> = {
+  working: 'text-good',
+  asking: 'text-warn',
+  error: 'text-bad',
+};
+
+const ActivityDot = ({ activity }: { activity?: KanbanActivity }) => {
+  if (!activity || activity.state === 'idle') return null;
+  const label = `${ACTIVITY_LABEL[activity.state]}${activity.summary ? `: ${activity.summary}` : ''}`;
   return (
-    <span className="flex items-center gap-2 min-w-0 text-xs text-accent">
-      <span className="w-2 h-2 shrink-0 rounded-full bg-accent animate-pulse" aria-hidden="true" />
-      <span className="truncate">{activity.summary || 'Arbeitet'}</span>
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-current ${ACTIVITY_COLOR[activity.state]} ${
+        activity.state === 'asking' ? 'kanban-blink' : ''
+      }`}
+    />
+  );
+};
+
+const LiveActivity = ({ activity }: { activity?: KanbanActivity }) => {
+  if (!activity || activity.state === 'idle') return null;
+  return (
+    <span className={`flex items-center min-w-0 text-xs ${ACTIVITY_COLOR[activity.state]}`}>
+      <span className="truncate">{activity.summary || ACTIVITY_LABEL[activity.state]}</span>
     </span>
   );
 };
@@ -564,62 +589,70 @@ export function KanbanBoard() {
                 <span className="text-sm font-semibold text-text">{col.label}</span>
                 <span className="ds-badge">{items.length}</span>
               </div>
-              <div className="flex flex-col gap-2 @4xl:overflow-auto @4xl:min-h-0">
-                {items.map(t => (
-                  <div
-                    key={t.file}
-                    role="button"
-                    tabIndex={0}
-                    draggable
-                    onDragStart={() => setDragging(t.file)}
-                    onDragEnd={() => {
-                      setDragging(null);
-                      setDropTarget(null);
-                    }}
-                    onClick={() => setSelected(t.file)}
-                    onKeyDown={e => {
-                      if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                        e.preventDefault();
-                        setSelected(t.file);
-                      }
-                    }}
-                    className={`flex flex-col gap-2 p-3 text-left rounded-md border border-line bg-elevated shadow-sm cursor-grab transition hover:border-line-strong hover:shadow-md active:cursor-grabbing ${
-                      dragging === t.file ? 'opacity-40' : ''
-                    }`}
-                  >
-                    <span className="flex items-start gap-2">
-                      <span className="flex-1 text-sm font-medium text-text line-clamp-2">
-                        {t.title}
+              <div className="flex flex-col gap-3 @4xl:overflow-auto @4xl:min-h-0">
+                {items.map(t => {
+                  const act = activity.find(a => a.number === t.number);
+                  return (
+                    <div
+                      key={t.file}
+                      role="button"
+                      tabIndex={0}
+                      draggable
+                      onDragStart={() => setDragging(t.file)}
+                      onDragEnd={() => {
+                        setDragging(null);
+                        setDropTarget(null);
+                      }}
+                      onClick={() => setSelected(t.file)}
+                      onKeyDown={e => {
+                        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
+                          setSelected(t.file);
+                        }
+                      }}
+                      className={`relative flex flex-col gap-3 p-4 text-left rounded-md border border-line bg-elevated shadow-sm cursor-grab transition hover:border-line-strong hover:shadow-md active:cursor-grabbing ${
+                        dragging === t.file ? 'opacity-40' : ''
+                      } ${act?.state === 'working' ? 'kanban-working' : ''}`}
+                    >
+                      <ActivityDot activity={act} />
+                      <span className="flex items-start gap-2 pr-4">
+                        <span className="flex-1 text-base font-medium text-text line-clamp-3">
+                          {t.title}
+                        </span>
+                        {t.idea && <span className="ds-badge warn">Idee</span>}
                       </span>
-                      {t.idea && <span className="ds-badge warn">Idee</span>}
-                    </span>
-                    <LiveActivity activity={activity.find(a => a.number === t.number)} />
-                    {t.status !== 'done' && <PlanProgress body={t.body} color={col.color} />}
-                    <span className="flex items-center gap-2 min-w-0 text-xs text-text-muted">
-                      <ProjectChips project={t.project} />
-                      <span className="ml-auto whitespace-nowrap">
-                        {t.number} · {t.created}
+                      <LiveActivity activity={act} />
+                      {t.status !== 'done' && <PlanProgress body={t.body} color={col.color} />}
+                      <span className="flex flex-wrap gap-1">
+                        <ProjectChips project={t.project} />
                       </span>
-                      <CopyCommand task={t} />
-                      {t.status === 'done' && (
-                        <button
-                          type="button"
-                          className="ds-btn sm icon"
-                          draggable={false}
-                          disabled={busy}
-                          aria-label="Archivieren"
-                          title="Archivieren"
-                          onClick={e => {
-                            e.stopPropagation();
-                            archive(t);
-                          }}
-                        >
-                          <Archive />
-                        </button>
-                      )}
-                    </span>
-                  </div>
-                ))}
+                      <span className="flex items-center gap-2 min-w-0 text-xs text-text-muted">
+                        <span className="whitespace-nowrap">
+                          {t.number} · {t.created}
+                        </span>
+                        <span className="ml-auto flex items-center gap-2">
+                          <CopyCommand task={t} />
+                          {t.status === 'done' && (
+                            <button
+                              type="button"
+                              className="ds-btn sm icon"
+                              draggable={false}
+                              disabled={busy}
+                              aria-label="Archivieren"
+                              title="Archivieren"
+                              onClick={e => {
+                                e.stopPropagation();
+                                archive(t);
+                              }}
+                            >
+                              <Archive />
+                            </button>
+                          )}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
                 {col.status === 'todo' && (
                   <button
                     className="ds-btn sm ghost justify-start text-text-muted"
