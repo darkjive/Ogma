@@ -45,6 +45,7 @@ import {
   setStatus,
   archiveTask,
   createTask,
+  addAttachment,
   listActivity,
   listProjects,
   startPreview,
@@ -271,7 +272,7 @@ const kanbanCreateSchema = z.object({
   project: z
     .string()
     .trim()
-    .max(100)
+    .max(300)
     .regex(/^[^\r\n]*$/)
     .default(''),
   body: z.string().max(20_000).default(''),
@@ -287,6 +288,24 @@ app.post('/api/kanban/tasks', generalLimiter, async (req, res) => {
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
+
+app.post(
+  '/api/kanban/tasks/:file/attachments',
+  generalLimiter,
+  express.raw({ type: '*/*', limit: '25mb' }),
+  async (req, res) => {
+    const name = z.string().trim().min(1).max(200).safeParse(req.query.name);
+    if (!name.success || !Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ error: 'Invalid attachment' });
+    }
+    try {
+      res.json({ path: await addAttachment(String(req.params.file), name.data, req.body) });
+    } catch (error) {
+      console.error('Failed to add Kanban attachment:', error);
+      res.status(500).json({ error: 'Failed to add attachment' });
+    }
+  }
+);
 
 app.post('/api/kanban/tasks/:file/status', generalLimiter, async (req, res) => {
   const parsed = kanbanStatusSchema.safeParse(req.body);

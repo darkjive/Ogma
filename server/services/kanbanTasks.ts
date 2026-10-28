@@ -4,12 +4,14 @@ import { spawn } from 'child_process';
 import { mkdir, readdir, readFile, rename, stat, writeFile, open } from 'fs/promises';
 import { homedir } from 'os';
 import { basename, join } from 'path';
+import { splitProjects } from '../../shared/kanban.js';
 import type { KanbanActivity, KanbanStatus, KanbanTask } from '../../shared/types.js';
 
 // Task files: one Markdown file per task in TASK_DIR, frontmatter title/status/project/created.
 const TASK_DIR = process.env.KANBAN_DIR || join(homedir(), '.local/share/kanban/tasks');
 const ARCHIVE_DIR = join(TASK_DIR, 'archive');
 const ACTIVITY_DIR = join(TASK_DIR, '..', 'activity');
+const ATTACHMENT_DIR = join(TASK_DIR, '..', 'attachments');
 const PROJECTS_DIR = join(homedir(), 'Dev');
 const STATUSES: readonly KanbanStatus[] = ['todo', 'doing', 'review', 'done'];
 const FILE_RE = /^\d{3}-[a-z0-9-]+\.md$/;
@@ -155,6 +157,31 @@ export async function createTask(input: {
   return task;
 }
 
+/** Store an uploaded file under attachments/NNN/ and list its absolute path in the task's `## Anhänge` section. */
+export async function addAttachment(file: string, name: string, data: Buffer): Promise<string> {
+  const task = await findTask(file);
+  const dir = join(ATTACHMENT_DIR, task.number);
+  await mkdir(dir, { recursive: true });
+  const safe =
+    basename(name)
+      .replace(/[^A-Za-z0-9._-]/g, '_')
+      .replace(/^\.+/, '_') || 'datei';
+  const dot = safe.lastIndexOf('.');
+  const [stem, ext] = dot > 0 ? [safe.slice(0, dot), safe.slice(dot)] : [safe, ''];
+  const taken = new Set(await readdir(dir));
+  let target = safe;
+  for (let i = 2; taken.has(target); i++) target = `${stem}-${i}${ext}`;
+  const path = join(dir, target);
+  await writeFile(path, data);
+  const body = task.body.trimEnd();
+  task.body = /^## Anhänge\s*$/m.test(body)
+    ? `${body}\n- ${path}`
+    : `${body}\n\n## Anhänge\n\n- ${path}`;
+  await saveTask(task);
+  cache = null;
+  return path;
+}
+
 export async function archiveTask(file: string): Promise<void> {
   if (!isTaskFile(file)) throw new Error('Invalid task file');
   await mkdir(ARCHIVE_DIR, { recursive: true });
@@ -197,11 +224,11 @@ export async function startPreview(file: string): Promise<string> {
   if (target) return target;
   if (!task.previewCmd) throw new Error(`${task.preview} is not reachable`);
 
-  const log = join(TASK_DIR, '..', `preview-${task.project || 'task'}.log`);
+  const log = join(TASK_DIR, '..', `preview-${splitProjects(task.project)[0] || 'task'}.log`);
   const out = await open(log, 'w');
   const child = spawn(task.previewCmd, {
     shell: true,
-    cwd: join(PROJECTS_DIR, task.project),
+    cwd: join(PROJECTS_DIR, splitProjects(task.project)[0] ?? ''),
     detached: true,
     stdio: ['ignore', out.fd, out.fd],
   });
@@ -238,7 +265,9 @@ export async function listActivity(): Promise<KanbanActivity[]> {
   for (const name of names) {
     try {
       const a = JSON.parse(await readFile(join(ACTIVITY_DIR, name), 'utf-8'));
-      const inProject = doing.filter(t => t.project && t.project === basename(String(a.cwd ?? '')));
+      const inProject = doing.filter(t =>
+        splitProjects(t.project).includes(basename(String(a.cwd ?? '')))
+      );
       const number = a.task || (inProject.length === 1 ? inProject[0].number : '');
       if (!number) continue;
       result.push({

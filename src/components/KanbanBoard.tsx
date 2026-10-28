@@ -4,6 +4,7 @@ import type { KanbanActivity, KanbanStatus, KanbanTask } from '../../shared/type
 import { apiFetch } from '../lib/api';
 import { toast } from '../lib/toast';
 import { useSettingJSON } from '../lib/settings';
+import { splitProjects } from '../../shared/kanban';
 
 const COLUMNS: { status: KanbanStatus; label: string; color: string }[] = [
   { status: 'todo', label: 'Offen', color: 'var(--sig-grey)' },
@@ -15,6 +16,11 @@ const POLL_MS = 3000;
 // A working session that stopped reporting (crash, closed terminal) is no longer shown as live.
 const ACTIVITY_STALE_S = 120;
 const CATEGORY_COLORS = 10;
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+const formatSize = (b: number) =>
+  b < 1024 * 1024
+    ? `${Math.max(1, Math.round(b / 1024))} KB`
+    : `${(b / 1024 / 1024).toFixed(1)} MB`;
 
 // Stable colour per project name from the design-system category palette.
 const projectColor = (name: string) => {
@@ -34,7 +40,9 @@ function NewTaskDialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [title, setTitle] = useState('');
-  const [project, setProject] = useState('');
+  const [projectList, setProjectList] = useState<string[]>([]);
+  const [projectInput, setProjectInput] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +57,29 @@ function NewTaskDialog({
       .catch(() => {});
   }, []);
 
+  const addProject = (raw: string) => {
+    const name = raw.trim();
+    if (name && !projectList.includes(name)) setProjectList([...projectList, name]);
+    setProjectInput('');
+  };
+
+  const addFiles = (list: FileList | File[]) => {
+    const picked = Array.from(list);
+    const tooBig = picked.find(f => f.size > MAX_UPLOAD_BYTES);
+    setError(tooBig ? `${tooBig.name} ist größer als 25 MB` : '');
+    setFiles(prev => [...prev, ...picked.filter(f => f.size <= MAX_UPLOAD_BYTES)]);
+  };
+
+  const onPaste = (e: React.ClipboardEvent) => {
+    const pasted = Array.from(e.clipboardData.files).map(f =>
+      f.name === 'image.png' ? new File([f], `clipboard-${Date.now()}.png`, { type: f.type }) : f
+    );
+    if (pasted.length) {
+      e.preventDefault();
+      addFiles(pasted);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -57,9 +88,22 @@ function NewTaskDialog({
       const res = await apiFetch('/api/kanban/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, project, body }),
+        body: JSON.stringify({
+          title,
+          project: [...projectList, projectInput.trim()].filter(Boolean).join(', '),
+          body,
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? 'Request failed');
+      const task: KanbanTask = await res.json();
+      // The task exists now; a failed upload must not make a retry create a duplicate.
+      for (const f of files) {
+        const up = await apiFetch(
+          `/api/kanban/tasks/${encodeURIComponent(task.file)}/attachments?name=${encodeURIComponent(f.name)}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f }
+        );
+        if (!up.ok) toast(`Anhang ${f.name} konnte nicht hochgeladen werden`);
+      }
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
@@ -69,10 +113,11 @@ function NewTaskDialog({
 
   return (
     <dialog ref={ref} className="ds-dialog" onClose={onClose}>
-      <form className="ds-dialog-body" onSubmit={submit}>
+      <form className="ds-dialog-body" onSubmit={submit} onPaste={onPaste}>
         <h3 className="ds-dialog-title">Neue Idee</h3>
         <p className="ds-dialog-text">
           Roh festhalten genügt. Claude formuliert die Idee sauber und plant sie mit /kanban-new.
+          Dateien landen als Pfade unter Anhänge in der Aufgabe.
         </p>
         <label className="flex flex-col gap-1">
           <span className="ds-label">Titel</span>
@@ -86,12 +131,41 @@ function NewTaskDialog({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="ds-label">Projekt</span>
+          <span className="ds-label">Projekte (das erste ist das Hauptprojekt)</span>
+          {projectList.length > 0 && (
+            <span className="flex flex-wrap gap-1">
+              {projectList.map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className="ds-chip"
+                  style={{ '--c': projectColor(p) } as React.CSSProperties}
+                  title="Entfernen"
+                  onClick={() => setProjectList(projectList.filter(x => x !== p))}
+                >
+                  {p}
+                  <X size={12} />
+                </button>
+              ))}
+            </span>
+          )}
           <input
             className="ds-input"
             list="kanban-projects"
-            value={project}
-            onChange={e => setProject(e.target.value)}
+            value={projectInput}
+            placeholder="Projekt hinzufügen"
+            onChange={e => {
+              const v = e.target.value;
+              // Picking a datalist entry fires a replacement event, typing a character does not.
+              if (!(e.nativeEvent as InputEvent).inputType && v) addProject(v);
+              else setProjectInput(v);
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                addProject(projectInput);
+              }
+            }}
             maxLength={100}
           />
           <datalist id="kanban-projects">
@@ -109,6 +183,42 @@ function NewTaskDialog({
             maxLength={20000}
           />
         </label>
+        <div
+          className="flex flex-col gap-1"
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => {
+            e.preventDefault();
+            addFiles(e.dataTransfer.files);
+          }}
+        >
+          <span className="ds-label">Dateien (auch per Drop oder Einfügen)</span>
+          {files.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <span className="truncate">{f.name}</span>
+              <span className="text-text-muted">{formatSize(f.size)}</span>
+              <button
+                type="button"
+                className="ds-btn sm icon ghost ml-auto"
+                aria-label={`${f.name} entfernen`}
+                onClick={() => setFiles(files.filter((_, j) => j !== i))}
+              >
+                <X />
+              </button>
+            </div>
+          ))}
+          <label className="ds-btn sm">
+            Dateien wählen
+            <input
+              type="file"
+              multiple
+              hidden
+              onChange={e => {
+                if (e.target.files) addFiles(e.target.files);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
         <p className="ds-dialog-error">{error}</p>
         <div className="ds-dialog-actions">
           <button type="button" className="ds-btn" onClick={() => ref.current?.close()}>
@@ -191,10 +301,18 @@ const CopyCommand = ({ task }: { task: KanbanTask }) => {
   );
 };
 
-const ProjectChip = ({ name }: { name: string }) => (
-  <span className="ds-chip" style={{ '--c': projectColor(name) } as React.CSSProperties}>
-    {name}
-  </span>
+const ProjectChips = ({ project }: { project: string }) => (
+  <>
+    {splitProjects(project).map(name => (
+      <span
+        key={name}
+        className="ds-chip"
+        style={{ '--c': projectColor(name) } as React.CSSProperties}
+      >
+        {name}
+      </span>
+    ))}
+  </>
 );
 
 export function KanbanBoard() {
@@ -294,8 +412,8 @@ export function KanbanBoard() {
     if (data?.url) window.open(data.url, '_blank');
   };
 
-  const projects = [...new Set(tasks.map(t => t.project).filter(Boolean))].sort();
-  const visible = tasks.filter(t => !project || t.project === project);
+  const projects = [...new Set(tasks.flatMap(t => splitProjects(t.project)))].sort();
+  const visible = tasks.filter(t => !project || splitProjects(t.project).includes(project));
   const shownColumns = COLUMNS.filter(c => !hidden.includes(c.status));
   const detail = tasks.find(t => t.file === selected);
 
@@ -319,7 +437,7 @@ export function KanbanBoard() {
                 {col.label}
               </span>
               {detail.idea && <span className="ds-badge warn">Idee</span>}
-              {detail.project && <ProjectChip name={detail.project} />}
+              <ProjectChips project={detail.project} />
               <span>
                 {detail.number} · {detail.created}
               </span>
@@ -478,7 +596,7 @@ export function KanbanBoard() {
                     <LiveActivity activity={activity.find(a => a.number === t.number)} />
                     {t.status !== 'done' && <PlanProgress body={t.body} color={col.color} />}
                     <span className="flex items-center gap-2 min-w-0 text-xs text-text-muted">
-                      {t.project && <ProjectChip name={t.project} />}
+                      <ProjectChips project={t.project} />
                       <span className="ml-auto whitespace-nowrap">
                         {t.number} · {t.created}
                       </span>

@@ -34,7 +34,7 @@
 | **Connectivity Monitor**                                                                                                           | HTTP latency checks to internet endpoints                                                                        |
 | **Network Outage Map**                                                                                                             | visualizes connectivity status                                                                                   |
 
-Kanban Board: columns can be hidden, ideas are captured raw (badge "Idee" until `/kanban-new NNN` formulates and plans them), plan steps written as `- [ ]` checklist show a progress bar, and the hook `~/.claude/hooks/kanban-activity.sh` (registered in `~/.claude/settings.json`) shows what Claude is doing right now on the card. Every card and the detail view has a copy button that puts the matching command on the clipboard (`/kanban NNN`, `/kanban-review NNN` in review, `/kanban-new NNN` for ideas).
+Kanban Board: columns can be hidden, ideas are captured raw with several projects (comma-separated in `project`, the first is the main one) and file attachments (stored in `~/.local/share/kanban/attachments/NNN/`, listed as absolute paths under `## Anhänge`) (badge "Idee" until `/kanban-new NNN` formulates and plans them), plan steps written as `- [ ]` checklist show a progress bar, and the hook `~/.claude/hooks/kanban-activity.sh` (registered in `~/.claude/settings.json`) shows what Claude is doing right now on the card. Every card and the detail view has a copy button that puts the matching command on the clipboard (`/kanban NNN`, `/kanban-review NNN` in review, `/kanban-new NNN` for ideas).
 
 ### Local-only widgets (no backend)
 
