@@ -288,7 +288,7 @@ const ActivityDot = ({ activity }: { activity?: KanbanActivity }) => {
       role="img"
       aria-label={label}
       title={label}
-      className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-current ${ACTIVITY_COLOR[activity.state]} ${
+      className={`absolute top-2 right-2 w-2 h-2 rounded-full bg-current ${ACTIVITY_COLOR[activity.state]} ${
         activity.state === 'asking' ? 'kanban-blink' : ''
       }`}
     />
