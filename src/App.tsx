@@ -74,30 +74,30 @@ const defaultLayout = [
   { i: 'docker', x: 6, y: 5, w: 6, h: 6, minW: 4, minH: 4 },
 
   // Row 3: System values
-  { i: 'metrics-cpu', x: 0, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
-  { i: 'metrics-memory', x: 3, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
-  { i: 'metrics-vram', x: 6, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
-  { i: 'metrics-temp', x: 9, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
+  { i: 'metrics-cpu', x: 0, y: 11, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-memory', x: 3, y: 11, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-vram', x: 6, y: 11, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-temp', x: 9, y: 11, w: 3, h: 2, minW: 3, minH: 2 },
 
   // Row 4: History, cores, storage
-  { i: 'metrics-graph', x: 0, y: 14, w: 6, h: 4, minW: 4, minH: 3 },
-  { i: 'metrics-cores', x: 6, y: 14, w: 3, h: 4, minW: 3, minH: 2 },
-  { i: 'metrics-storage', x: 9, y: 14, w: 3, h: 4, minW: 3, minH: 3 },
+  { i: 'metrics-graph', x: 0, y: 13, w: 6, h: 4, minW: 4, minH: 3 },
+  { i: 'metrics-cores', x: 6, y: 13, w: 3, h: 4, minW: 3, minH: 2 },
+  { i: 'metrics-storage', x: 9, y: 13, w: 3, h: 4, minW: 3, minH: 3 },
 
   // Row 5: Services
-  { i: 'service-status', x: 0, y: 18, w: 4, h: 4, minW: 4, minH: 4 },
-  { i: 'github', x: 4, y: 18, w: 4, h: 4, minW: 4, minH: 4 },
-  { i: 'weather', x: 8, y: 18, w: 4, h: 4, minW: 4, minH: 4 },
+  { i: 'service-status', x: 0, y: 17, w: 4, h: 4, minW: 4, minH: 4 },
+  { i: 'github', x: 4, y: 17, w: 4, h: 4, minW: 4, minH: 4 },
+  { i: 'weather', x: 8, y: 17, w: 4, h: 4, minW: 4, minH: 4 },
 
   // Row 6: Network + scraper
-  { i: 'network-outage', x: 0, y: 22, w: 6, h: 4, minW: 6, minH: 4 },
-  { i: 'web-scraper', x: 6, y: 22, w: 6, h: 4, minW: 3, minH: 3 },
+  { i: 'network-outage', x: 0, y: 21, w: 6, h: 4, minW: 6, minH: 4 },
+  { i: 'web-scraper', x: 6, y: 21, w: 6, h: 4, minW: 3, minH: 3 },
 
   // Row 7: Backups
-  { i: 'backups', x: 0, y: 26, w: 12, h: 6, minW: 3, minH: 3 },
+  { i: 'backups', x: 0, y: 25, w: 12, h: 6, minW: 3, minH: 3 },
 
   // Row 8: Markdown editor (full width for editing room)
-  { i: 'markdown-editor', x: 0, y: 32, w: 12, h: 4, minW: 6, minH: 3 },
+  { i: 'markdown-editor', x: 0, y: 31, w: 12, h: 4, minW: 6, minH: 3 },
 ];
 
 // Below this width the grid collapses to one column (phones via the Pforte gateway).
@@ -274,7 +274,7 @@ function migrateLegacyMetrics() {
 // Stale saved layouts (from an older defaultLayout revision) are discarded
 // so users get the fixed layout automatically, without having to know to
 // press "Reset".
-const LAYOUT_VERSION = 9;
+const LAYOUT_VERSION = 10;
 
 function invalidateStaleLayout() {
   try {

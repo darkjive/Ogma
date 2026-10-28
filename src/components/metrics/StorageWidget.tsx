@@ -1,14 +1,16 @@
 import { MetricsShell } from './MetricsShell';
 import { formatBytes } from '../../lib/format';
 
+const MIN_DISK_BYTES = 64 * 1024 * 1024;
+
 export function StorageWidget() {
   return (
     <MetricsShell>
       {metrics => {
-        // Skip pseudo filesystems (size 0, e.g. efivars) and bind mounts of the same volume (/ and /srv).
+        // Skip pseudo filesystems (a few KB, e.g. efivars) and bind mounts of the same volume (/ and /srv).
         const seen = new Set<string>();
         const disks = metrics.disk
-          .filter(d => d.size > 0)
+          .filter(d => d.size >= MIN_DISK_BYTES)
           .filter(d => {
             const key = `${d.fs}|${d.size}|${d.used}`;
             if (seen.has(key)) return false;
