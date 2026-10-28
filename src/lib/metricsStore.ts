@@ -11,6 +11,8 @@ export interface HistoricalPoint {
   time: string;
   cpu: number;
   memory: number;
+  vram: number | null;
+  temp: number | null;
 }
 
 export type MetricsStatus = 'connecting' | 'connected' | 'disconnected';
@@ -61,6 +63,8 @@ function pushSample(metrics: MetricsData) {
     time: new Date().toLocaleTimeString(),
     cpu: parseFloat(metrics.cpu.usage),
     memory: parseFloat(metrics.memory.percentage),
+    vram: metrics.vram?.available ? parseFloat(metrics.vram.gpus[0]?.percentage ?? '') || 0 : null,
+    temp: metrics.temperature.available ? metrics.temperature.main : null,
   };
   state = {
     ...state,

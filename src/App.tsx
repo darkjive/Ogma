@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import GridLayout from 'react-grid-layout/legacy';
+import { CoresWidget } from './components/metrics/CoresWidget';
 import { CpuWidget } from './components/metrics/CpuWidget';
 import { MemoryWidget } from './components/metrics/MemoryWidget';
 import { MetricsGraphWidget } from './components/metrics/MetricsGraphWidget';
@@ -77,9 +78,10 @@ const defaultLayout = [
   { i: 'metrics-vram', x: 6, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
   { i: 'metrics-temp', x: 9, y: 11, w: 3, h: 3, minW: 3, minH: 2 },
 
-  // Row 4: History
-  { i: 'metrics-graph', x: 0, y: 14, w: 8, h: 4, minW: 6, minH: 3 },
-  { i: 'metrics-storage', x: 8, y: 14, w: 4, h: 4, minW: 3, minH: 3 },
+  // Row 4: History, cores, storage
+  { i: 'metrics-graph', x: 0, y: 14, w: 6, h: 4, minW: 4, minH: 3 },
+  { i: 'metrics-cores', x: 6, y: 14, w: 3, h: 4, minW: 3, minH: 2 },
+  { i: 'metrics-storage', x: 9, y: 14, w: 3, h: 4, minW: 3, minH: 3 },
 
   // Row 5: Services
   { i: 'service-status', x: 0, y: 18, w: 4, h: 4, minW: 4, minH: 4 },
@@ -99,12 +101,12 @@ const defaultLayout = [
 
 // Below this width the grid collapses to one column (phones via the Pforte gateway).
 const MOBILE_BREAKPOINT = 768;
-// Below this width (and above phones) the grid uses 6 columns.
+// Below this width (and above phones) the tablet layout applies.
 const TABLET_BREAKPOINT = 1280;
 // Page padding: px-3 on phones, px-6 above; the grid width must match.
 const gridWidth = (viewport: number) => viewport - (viewport < MOBILE_BREAKPOINT ? 24 : 48);
 // The tablet view (e.g. the app on half a screen) has its own layout, so editing it never
-// touches the desktop one. Until it is edited, it is derived from the desktop layout.
+// touches the desktop one. Until it is edited, tabletDefaultLayout applies.
 const TABLET_LAYOUT_KEY = 'dashboard-layout-tablet';
 
 function loadLayout(key: string): LayoutItem[] | null {
@@ -128,31 +130,27 @@ function loadLayout(key: string): LayoutItem[] | null {
   return null;
 }
 
-// 6 columns in desktop reading order.
-function deriveTabletLayout(layout: LayoutItem[]): LayoutItem[] {
-  const packed: LayoutItem[] = [];
-  let x = 0;
-  let y = 0;
-  let rowH = 0;
-  for (const item of [...layout].sort((a, b) => a.y - b.y || a.x - b.x)) {
-    const w = item.w >= 6 ? 6 : 3;
-    if (x + w > 6) {
-      y += rowH;
-      x = 0;
-      rowH = 0;
-    }
-    packed.push({
-      ...item,
-      x,
-      y,
-      w,
-      minW: Math.min(item.minW ?? 1, w),
-    });
-    x += w;
-    rowH = Math.max(rowH, item.h);
-  }
-  return packed;
-}
+// Tablet default (12 columns on half a screen): four metric tiles in a row, history full
+// width, cores + storage side by side, then three narrow service columns.
+const tabletDefaultLayout: LayoutItem[] = [
+  { i: 'kanban', x: 0, y: 0, w: 12, h: 5, minW: 6, minH: 4 },
+  { i: 'metrics-cpu', x: 0, y: 5, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-memory', x: 3, y: 5, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-vram', x: 6, y: 5, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-temp', x: 9, y: 5, w: 3, h: 2, minW: 3, minH: 2 },
+  { i: 'metrics-graph', x: 0, y: 7, w: 12, h: 3, minW: 6, minH: 3 },
+  { i: 'metrics-cores', x: 0, y: 10, w: 6, h: 3, minW: 3, minH: 2 },
+  { i: 'metrics-storage', x: 6, y: 10, w: 6, h: 3, minW: 3, minH: 3 },
+  { i: 'docker', x: 0, y: 13, w: 4, h: 6, minW: 3, minH: 4 },
+  { i: 'service-status', x: 4, y: 13, w: 4, h: 6, minW: 3, minH: 4 },
+  { i: 'network-outage', x: 8, y: 13, w: 4, h: 6, minW: 3, minH: 4 },
+  { i: 'git-status', x: 0, y: 19, w: 6, h: 5, minW: 4, minH: 4 },
+  { i: 'github', x: 6, y: 19, w: 3, h: 5, minW: 3, minH: 4 },
+  { i: 'weather', x: 9, y: 19, w: 3, h: 5, minW: 3, minH: 4 },
+  { i: 'web-scraper', x: 0, y: 24, w: 12, h: 4, minW: 3, minH: 3 },
+  { i: 'backups', x: 0, y: 28, w: 12, h: 6, minW: 3, minH: 3 },
+  { i: 'markdown-editor', x: 0, y: 34, w: 12, h: 4, minW: 6, minH: 3 },
+];
 
 const defaultEnabledWidgets = {
   kanban: true,
@@ -160,6 +158,7 @@ const defaultEnabledWidgets = {
   docker: true,
   backups: true,
   'metrics-cpu': true,
+  'metrics-cores': true,
   'metrics-memory': true,
   'metrics-vram': true,
   'metrics-temp': true,
@@ -186,6 +185,7 @@ const widgetConfig = {
   docker: { name: 'DOCKER', icon: Container, component: DockerWidget },
   backups: { name: 'BACKUPS', icon: HardDriveDownload, component: BackupWidget },
   'metrics-cpu': { name: 'CPU', icon: Cpu, component: CpuWidget },
+  'metrics-cores': { name: 'CORES', icon: Cpu, component: CoresWidget },
   'metrics-memory': { name: 'MEMORY', icon: MemoryStick, component: MemoryWidget },
   'metrics-vram': { name: 'VRAM', icon: Gpu, component: VramWidget },
   'metrics-temp': { name: 'TEMPERATURE', icon: Thermometer, component: TemperatureWidget },
@@ -273,7 +273,7 @@ function migrateLegacyMetrics() {
 // Stale saved layouts (from an older defaultLayout revision) are discarded
 // so users get the fixed layout automatically, without having to know to
 // press "Reset".
-const LAYOUT_VERSION = 8;
+const LAYOUT_VERSION = 9;
 
 function invalidateStaleLayout() {
   try {
@@ -337,7 +337,7 @@ function App() {
   const [layout, setLayout] = useState<LayoutItem[]>(
     () => loadLayout('dashboard-layout') ?? defaultLayout
   );
-  // null = not edited yet, derived from the desktop layout
+  // null = not edited yet, tabletDefaultLayout applies
   const [tabletSaved, setTabletSaved] = useState<LayoutItem[] | null>(() =>
     loadLayout(TABLET_LAYOUT_KEY)
   );
@@ -419,7 +419,7 @@ function App() {
 
     if (!wasEnabled && tabletSaved && !tabletSaved.some(item => item.i === widgetId)) {
       const maxY = tabletSaved.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-      const next = [...tabletSaved, { i: widgetId, x: 0, y: maxY, w: 6, h: 4, minW: 3, minH: 2 }];
+      const next = [...tabletSaved, { i: widgetId, x: 0, y: maxY, w: 12, h: 4, minW: 3, minH: 2 }];
       setTabletSaved(next);
       localStorage.setItem(TABLET_LAYOUT_KEY, JSON.stringify(next));
     }
@@ -446,11 +446,8 @@ function App() {
     return stacked;
   }, [layout]);
 
-  // Tablets: 6 columns, editable and saved on its own (see TABLET_LAYOUT_KEY).
-  const tabletLayout = useMemo(
-    () => tabletSaved ?? deriveTabletLayout(layout),
-    [tabletSaved, layout]
-  );
+  // Tablets: 12 columns, editable and saved on its own (see TABLET_LAYOUT_KEY).
+  const tabletLayout = useMemo(() => tabletSaved ?? tabletDefaultLayout, [tabletSaved]);
 
   const manualSave = () => {
     if (isTablet) localStorage.setItem(TABLET_LAYOUT_KEY, JSON.stringify(tabletLayout));
@@ -607,7 +604,7 @@ function App() {
         <GridLayout
           className="layout"
           layout={isMobile ? mobileLayout : isTablet ? tabletLayout : layout}
-          cols={isMobile ? 1 : isTablet ? 6 : 12}
+          cols={isMobile ? 1 : 12}
           rowHeight={isMobile ? 80 : 120}
           width={containerWidth}
           onLayoutChange={isDesktop ? saveLayout : undefined}

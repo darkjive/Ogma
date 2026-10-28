@@ -53,7 +53,9 @@ body {
 
 /* Component Classes */
 .metric-value {
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-3xl);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
 
