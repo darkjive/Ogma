@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Archive, Copy, ExternalLink, Inbox, Plus, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Archive,
+  Copy,
+  ExternalLink,
+  Inbox,
+  Pencil,
+  Plus,
+  X,
+} from 'lucide-react';
 import type { KanbanActivity, KanbanStatus, KanbanTask } from '../../shared/types';
 import { apiFetch } from '../lib/api';
 import { toast } from '../lib/toast';
@@ -346,6 +356,9 @@ export function KanbanBoard() {
   const [project, setProject] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<{ file: string; title: string; body: string } | null>(
+    null
+  );
   const [creating, setCreating] = useState(false);
   const [hidden, setHidden] = useSettingJSON<KanbanStatus[]>('kanban-hidden-columns', []);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -424,6 +437,15 @@ export function KanbanBoard() {
     await load();
   };
 
+  const saveEdit = async () => {
+    if (!editing) return;
+    if (await post(editing.file, 'edit', { title: editing.title, body: editing.body })) {
+      setEditing(null);
+      etag.current = '';
+      await load();
+    }
+  };
+
   const archive = async (task: KanbanTask) => {
     if (await post(task.file, 'archive')) {
       setSelected(null);
@@ -449,6 +471,7 @@ export function KanbanBoard() {
   if (detail) {
     const index = COLUMNS.findIndex(c => c.status === detail.status);
     const col = COLUMNS[index];
+    const edit = editing?.file === detail.file ? editing : null;
     return (
       <div className="flex flex-col h-full gap-3 min-h-0">
         <div className="flex items-start gap-2">
@@ -456,7 +479,17 @@ export function KanbanBoard() {
             <X />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="text-base font-semibold text-text">{detail.title}</div>
+            {edit ? (
+              <input
+                className="ds-input"
+                aria-label="Titel"
+                value={edit.title}
+                maxLength={200}
+                onChange={e => setEditing({ ...edit, title: e.target.value })}
+              />
+            ) : (
+              <div className="text-base font-semibold text-text">{detail.title}</div>
+            )}
             <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-text-muted">
               <span className="ds-chip" style={{ '--c': col.color } as React.CSSProperties}>
                 {col.label}
@@ -494,6 +527,19 @@ export function KanbanBoard() {
               <ExternalLink />
             </button>
           )}
+          {detail.idea && !edit && (
+            <button
+              className="ds-btn sm icon"
+              disabled={busy}
+              onClick={() =>
+                setEditing({ file: detail.file, title: detail.title, body: detail.body })
+              }
+              aria-label="Bearbeiten"
+              title="Bearbeiten"
+            >
+              <Pencil />
+            </button>
+          )}
           <CopyCommand task={detail} />
           <button
             className="ds-btn sm icon"
@@ -506,9 +552,33 @@ export function KanbanBoard() {
         </div>
         <LiveActivity activity={activity.find(a => a.number === detail.number)} />
         <PlanProgress body={detail.body} color={col.color} />
-        <pre className="flex-1 min-h-0 overflow-auto whitespace-pre-wrap text-sm text-text-dim bg-elevated border border-line rounded-lg p-3">
-          {detail.body}
-        </pre>
+        {edit ? (
+          <>
+            <textarea
+              className="ds-input flex-1 min-h-0 text-sm"
+              aria-label="Text"
+              value={edit.body}
+              maxLength={20_000}
+              onChange={e => setEditing({ ...edit, body: e.target.value })}
+            />
+            <div className="flex gap-2">
+              <button
+                className="ds-btn sm primary"
+                disabled={busy || !edit.title.trim()}
+                onClick={saveEdit}
+              >
+                Speichern
+              </button>
+              <button className="ds-btn sm" disabled={busy} onClick={() => setEditing(null)}>
+                Abbrechen
+              </button>
+            </div>
+          </>
+        ) : (
+          <pre className="flex-1 min-h-0 overflow-auto whitespace-pre-wrap text-sm text-text-dim bg-elevated border border-line rounded-lg p-3">
+            {detail.body}
+          </pre>
+        )}
       </div>
     );
   }

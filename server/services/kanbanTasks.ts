@@ -114,6 +114,18 @@ export async function setStatus(file: string, status: KanbanStatus): Promise<voi
   cache = null;
 }
 
+export async function updateTask(
+  file: string,
+  input: { title: string; body: string }
+): Promise<void> {
+  const task = await findTask(file);
+  if (!task.idea) throw new Error('Only ideas can be edited');
+  task.title = input.title;
+  task.body = input.body;
+  await saveTask(task);
+  cache = null;
+}
+
 const SLUG_MAP: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' };
 
 function slugify(title: string): string {

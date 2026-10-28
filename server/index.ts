@@ -43,6 +43,7 @@ import {
 import {
   listTasks,
   setStatus,
+  updateTask,
   archiveTask,
   createTask,
   addAttachment,
@@ -306,6 +307,20 @@ app.post(
     }
   }
 );
+
+const kanbanEditSchema = kanbanCreateSchema.pick({ title: true, body: true });
+
+app.post('/api/kanban/tasks/:file/edit', generalLimiter, async (req, res) => {
+  const parsed = kanbanEditSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid task' });
+  try {
+    await updateTask(String(req.params.file), parsed.data);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Failed to edit Kanban task:', error);
+    res.status(400).json({ error: 'Failed to edit task' });
+  }
+});
 
 app.post('/api/kanban/tasks/:file/status', generalLimiter, async (req, res) => {
   const parsed = kanbanStatusSchema.safeParse(req.body);
