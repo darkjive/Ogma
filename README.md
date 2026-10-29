@@ -16,6 +16,8 @@
   <img src="docs/screenshot-mobile.png" alt="Ogma dashboard on a phone" width="24%" />
 </p>
 
+![Ogma architecture: React UI talks to the Express API via fetch and WebSocket, the API's services read Kanban files, Git repos, Docker, systemd timers and system metrics](docs/architecture.svg)
+
 ## ✨ Features
 
 ### Widgets (real backend data)
